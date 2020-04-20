@@ -154,12 +154,12 @@ class QLearningAgent(ReinforcementAgent):
         '''
         position = self.computePosition(state)
         naction = self.actions[action]
-     	legalActions = self.getLegalActions(state)
-        if len(legalActions)==0: #Terminal state, no actions available
+     	
+        if reward==1 or reward==-1: #Terminal state, no actions available
             self.q_table[position][naction] = (1-self.alpha) * self.q_table[position][naction] + self.alpha * (reward + 0)   
         else:
             self.q_table[position][naction] = (1-self.alpha) * self.q_table[position][naction] + self.alpha * (reward + self.discount * self.getValue(nextState))
-            
+          
 
     def getPolicy(self, state):
 	"Return the best action in the qtable for a given state"
