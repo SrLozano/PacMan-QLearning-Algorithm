@@ -148,16 +148,14 @@ class QLearningAgent(ReinforcementAgent):
 		        Q(state,action) <- (1-self.alpha) Q(state,action) + self.alpha * (r + 0)
 	        else:
 	  	        Q(state,action) <- (1-self.alpha) Q(state,action) + self.alpha * (r + self.discount * max a' Q(nextState, a'))
-	
-            Note that if there are no legal actions, which is the case at the
-            terminal state, the math is different.
+
         '''
-        position = self.computePosition(state)
-        naction = self.actions[action]
+        position = self.computePosition(state) #obtenemos la posicion correspondiente con el estado actual
+        naction = self.actions[action] #obtenemos el identificador de la accion a tomar
      	
-        if reward==1 or reward==-1: #Terminal state, no actions available
+        if reward==1 or reward==-1: #el estado sera final si el refuerzo es 1 o -1
             self.q_table[position][naction] = (1-self.alpha) * self.q_table[position][naction] + self.alpha * (reward + 0)   
-        else:
+        else: #si el refuerzo es 0 entonces el estado sera no final
             self.q_table[position][naction] = (1-self.alpha) * self.q_table[position][naction] + self.alpha * (reward + self.discount * self.getValue(nextState))
           
 
