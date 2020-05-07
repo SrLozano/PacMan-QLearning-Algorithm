@@ -1,5 +1,23 @@
 # game.py
 # -------
+# Licensing Information:  You are free to use or extend these projects for
+# educational purposes provided that (1) you do not distribute or publish
+# solutions, (2) you retain this notice, and (3) you provide clear
+# attribution to UC Berkeley.
+# 
+# Attribution Information: The Pacman AI projects were developed at UC Berkeley.
+# The core projects and autograders were primarily created by John DeNero
+# (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
+# Student side autograding was added by Brad Miller, Nick Hay, and
+# Pieter Abbeel (pabbeel@cs.berkeley.edu).
+
+
+# game.py
+# -------
+# Licensing Information: Please do not distribute or publish solutions to this
+# project. You are free to use and extend these projects for educational
+# purposes. The Pacman AI projects were developed at UC Berkeley, primarily by
+# John DeNero (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
 
 from util import *
 import time, os
@@ -109,6 +127,7 @@ class AgentState:
         self.isPacman = isPacman
         self.scaredTimer = 0
         self.numCarrying = 0
+        self.numReturned = 0
 
     def __str__( self ):
         if self.isPacman:
@@ -129,6 +148,7 @@ class AgentState:
         state.configuration = self.configuration
         state.scaredTimer = self.scaredTimer
         state.numCarrying = self.numCarrying
+        state.numReturned = self.numReturned
         return state
 
     def getPosition(self):
@@ -468,6 +488,7 @@ class GameStateData:
         Creates an initial game state from a layout array (see layout.py).
         """
         self.food = layout.food.copy()
+        #self.capsules = []
         self.capsules = layout.capsules[:]
         self.layout = layout
         self.score = 0
@@ -541,7 +562,6 @@ class Game:
         sys.stdout = OLD_STDOUT
         sys.stderr = OLD_STDERR
 
-
     def run( self ):
         """
         Main control loop for game play.
@@ -561,6 +581,7 @@ class Game:
                 self.unmute()
                 self._agentCrash(i, quiet=True)
                 return
+
             if ("registerInitialState" in dir(agent)):
                 self.mute(i)
                 if self.catchExceptions:
@@ -588,12 +609,15 @@ class Game:
 
         agentIndex = self.startingIndex
         numAgents = len( self.agents )
-
+        step = 0
         while not self.gameOver:
             # Fetch the next agent
             agent = self.agents[agentIndex]
             move_time = 0
             skip_action = False
+            
+            if agentIndex == 0: #El index del pacman es 0, solo en ese caso imprimimos su info
+                agent.printLineData(self.state)
             # Generate an observation of the state
             if 'observationFunction' in dir( agent ):
                 self.mute(agentIndex)
@@ -616,9 +640,9 @@ class Game:
                 self.unmute()
             else:
                 observation = self.state.deepCopy()
-
             # Solicit an action
             action = None
+            step += 1
             self.mute(agentIndex)
             if self.catchExceptions:
                 try:

@@ -1,5 +1,16 @@
 # util.py
 # -------
+# Licensing Information:  You are free to use or extend these projects for
+# educational purposes provided that (1) you do not distribute or publish
+# solutions, (2) you retain this notice, and (3) you provide clear
+# attribution to UC Berkeley.
+# 
+# Attribution Information: The Pacman AI projects were developed at UC Berkeley.
+# The core projects and autograders were primarily created by John DeNero
+# (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
+# Student side autograding was added by Brad Miller, Nick Hay, and
+# Pieter Abbeel (pabbeel@cs.berkeley.edu).
+
 
 import sys
 import inspect
@@ -418,7 +429,7 @@ def raiseNotDefined():
     fileName = inspect.stack()[1][1]
     line = inspect.stack()[1][2]
     method = inspect.stack()[1][3]
-    
+
     print "*** Method not implemented: %s at line %s of %s" % (method, line, fileName)
     sys.exit(1)
 
@@ -459,7 +470,7 @@ def nSample(distribution, values, n):
 
 def sample(distribution, values = None):
     if type(distribution) == Counter:
-        items = distribution.items()
+        items = sorted(distribution.items())
         distribution = [i[1] for i in items]
         values = [i[0] for i in items]
     if sum(distribution) != 1:
@@ -472,7 +483,7 @@ def sample(distribution, values = None):
     return values[i]
 
 def sampleFromCounter(ctr):
-    items = ctr.items()
+    items = sorted(ctr.items())
     return sample([v for k,v in items], [k for k,v in items])
 
 def getProbability(value, distribution, values):
@@ -570,9 +581,9 @@ def pause():
 # code to handle timeouts
 #
 # FIXME
-# NOTE: TimeoutFuncton is NOT reentrant.  Later timeouts will silently 
-# disable earlier timeouts.  Could be solved by maintaining a global list 
-# of active time outs.  Currently, questions which have test cases calling 
+# NOTE: TimeoutFuncton is NOT reentrant.  Later timeouts will silently
+# disable earlier timeouts.  Could be solved by maintaining a global list
+# of active time outs.  Currently, questions which have test cases calling
 # this have all student code so wrapped.
 #
 import signal
@@ -619,13 +630,13 @@ _MUTED = False
 class WritableNull:
     def write(self, string):
         pass
- 
+
 def mutePrint():
     global _ORIGINAL_STDOUT, _ORIGINAL_STDERR, _MUTED
-    if _MUTED: 
+    if _MUTED:
         return
     _MUTED = True
-    
+
     _ORIGINAL_STDOUT = sys.stdout
     #_ORIGINAL_STDERR = sys.stderr
     sys.stdout = WritableNull()
@@ -633,10 +644,10 @@ def mutePrint():
 
 def unmutePrint():
     global _ORIGINAL_STDOUT, _ORIGINAL_STDERR, _MUTED
-    if not _MUTED: 
+    if not _MUTED:
         return
     _MUTED = False
-    
+
     sys.stdout = _ORIGINAL_STDOUT
     #sys.stderr = _ORIGINAL_STDERR
-    
+

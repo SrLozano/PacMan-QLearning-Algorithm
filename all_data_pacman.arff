@@ -1,0 +1,38 @@
+@RELATION pacman-data-training
+
+    @ATTRIBUTE pacman_positionX NUMERIC
+    @ATTRIBUTE pacman_positionY NUMERIC
+    @ATTRIBUTE legal_North {0, 1}
+    @ATTRIBUTE legal_South {0, 1}
+    @ATTRIBUTE legal_East {0, 1}
+    @ATTRIBUTE legal_West {0, 1}
+    @ATTRIBUTE legal_Stop {0, 1}
+    @ATTRIBUTE pacman_direction {North, South, East, West, Stop}
+    @ATTRIBUTE n_ghosts NUMERIC
+    @ATTRIBUTE living_ghosts NUMERIC
+    @ATTRIBUTE ghost1_positionX NUMERIC
+    @ATTRIBUTE ghost1_positionY NUMERIC
+    @ATTRIBUTE ghost2_positionX NUMERIC
+    @ATTRIBUTE ghost2_positionY NUMERIC
+    @ATTRIBUTE ghost3_positionX NUMERIC
+    @ATTRIBUTE ghost3_positionY NUMERIC
+    @ATTRIBUTE ghost4_positionX NUMERIC
+    @ATTRIBUTE ghost4_positionY NUMERIC
+    @ATTRIBUTE ghost1_direction {North, South, East, West, Stop, None}
+    @ATTRIBUTE ghost2_direction {North, South, East, West, Stop, None}
+    @ATTRIBUTE ghost3_direction {North, South, East, West, Stop, None}
+    @ATTRIBUTE ghost4_direction {North, South, East, West, Stop, None}
+    @ATTRIBUTE ghost1_distance NUMERIC
+    @ATTRIBUTE ghost2_distance NUMERIC
+    @ATTRIBUTE ghost3_distance NUMERIC
+    @ATTRIBUTE ghost4_distance NUMERIC
+    @ATTRIBUTE n_food NUMERIC
+    @ATTRIBUTE closest_foo NUMERIC
+    @ATTRIBUTE next_step {North, South, East, West, Stop}
+    @ATTRIBUTE score NUMERIC
+    @ATTRIBUTE score1 NUMERIC
+    @ATTRIBUTE score2 NUMERIC
+    @ATTRIBUTE score3 NUMERIC
+
+
+    @data

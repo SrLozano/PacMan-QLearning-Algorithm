@@ -1,5 +1,16 @@
 # graphicsDisplay.py
 # ------------------
+# Licensing Information:  You are free to use or extend these projects for
+# educational purposes provided that (1) you do not distribute or publish
+# solutions, (2) you retain this notice, and (3) you provide clear
+# attribution to UC Berkeley.
+# 
+# Attribution Information: The Pacman AI projects were developed at UC Berkeley.
+# The core projects and autograders were primarily created by John DeNero
+# (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
+# Student side autograding was added by Brad Miller, Nick Hay, and
+# Pieter Abbeel (pabbeel@cs.berkeley.edu).
+
 
 from graphicsUtils import *
 import math, time
@@ -29,6 +40,22 @@ GHOST_COLORS.append(formatColor(.1,.75,.7)) # Green
 GHOST_COLORS.append(formatColor(1.0,0.6,0.0)) # Yellow
 GHOST_COLORS.append(formatColor(.4,0.13,0.91)) # Purple
 
+GHOST_COLORS.append(formatColor(0.941176, 0.972549, 1)) #aliceblue
+GHOST_COLORS.append(formatColor(0.498039,1,0.831373)) # aquamarine
+GHOST_COLORS.append(formatColor( 0.870588, 0.721569, 0.529412)) #burlywood
+GHOST_COLORS.append(formatColor(0.372549, 0.619608, 0.627451)) # cadetblue
+GHOST_COLORS.append(formatColor(.541176, 0.168627, 0.886275)) #blueviolet
+GHOST_COLORS.append(formatColor(0.647059, 0.164706, 0.164706)) # brown
+GHOST_COLORS.append(formatColor(0.862745, 0.0784314, 0.235294)) #crimson
+GHOST_COLORS.append(formatColor( 0, 0.392157, 0)) # darkgreen
+GHOST_COLORS.append(formatColor( 1, 0.54902, 0)) #darkorange
+GHOST_COLORS.append(formatColor(1, 0.0784314, 0.576471)) # deeppink
+GHOST_COLORS.append(formatColor(1, 0.843137, 0)) #gold
+GHOST_COLORS.append(formatColor(0.803922, 0.360784, 0.360784)) # indianred
+GHOST_COLORS.append(formatColor(1, 0.894118, 0.882353)) #minstrose
+GHOST_COLORS.append(formatColor(0.992157, 0.960784, 0.901961)) #oldlace
+GHOST_COLORS.append(formatColor(0.933333, 0.509804, 0.933333)) #violet
+GHOST_COLORS.append(formatColor(0.815686, 0.12549, 0.564706)) #wheat
 TEAM_COLORS = GHOST_COLORS[:2]
 
 GHOST_SHAPE = [
@@ -151,6 +178,9 @@ class PacmanGraphics:
         self.capture = capture
         self.frameTime = frameTime
 
+    def checkNullDisplay(self):
+        return False
+
     def initialize(self, state, isBlue = False):
         self.isBlue = isBlue
         self.startGraphics(state)
@@ -232,6 +262,7 @@ class PacmanGraphics:
         self.agentImages[agentIndex] = (agentState, prevImage)
 
         if newState._foodEaten != None:
+	    print 'REMOVE'
             self.removeFood(newState._foodEaten, self.food)
         if newState._capsuleEaten != None:
             self.removeCapsule(newState._capsuleEaten, self.capsules)
@@ -574,6 +605,8 @@ class PacmanGraphics:
 
     def updateDistributions(self, distributions):
         "Draws an agent's belief distributions"
+        # copy all distributions so we don't change their state
+        distributions = map(lambda x: x.copy(), distributions)
         if self.distributionImages == None:
             self.drawDistributions(self.previousState)
         for x in range(len(self.distributionImages)):

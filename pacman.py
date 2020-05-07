@@ -1,5 +1,17 @@
 # pacman.py
 # ---------
+# Licensing Information:  You are free to use or extend these projects for
+# educational purposes provided that (1) you do not distribute or publish
+# solutions, (2) you retain this notice, and (3) you provide clear
+# attribution to UC Berkeley.
+# 
+# Attribution Information: The Pacman AI projects were developed at UC Berkeley.
+# The core projects and autograders were primarily created by John DeNero
+# (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
+# Student side autograding was added by Brad Miller, Nick Hay, and
+# Pieter Abbeel (pabbeel@cs.berkeley.edu).
+
+
 """
 Pacman.py holds the logic for the classic pacman game along with the main
 code to run a game.  This file is divided into three sections:
@@ -71,7 +83,7 @@ class GameState:
         """
         Returns the legal actions for the agent specified.
         """
-        GameState.explored.add(self)
+#        GameState.explored.add(self)
         if self.isWin() or self.isLose(): return []
 
         if agentIndex == 0:  # Pacman is moving
@@ -108,6 +120,8 @@ class GameState:
         # Book keeping
         state.data._agentMoved = agentIndex
         state.data.score += state.data.scoreChange
+        GameState.explored.add(self)
+        GameState.explored.add(state)
         return state
 
     def getLegalPacmanActions( self ):
@@ -151,7 +165,7 @@ class GameState:
         return len( self.data.agentStates )
 
     def getScore( self ):
-        return self.data.score
+        return float(self.data.score)
 
     def getCapsules(self):
         """
@@ -221,7 +235,7 @@ class GameState:
         """
         Allows two states to be compared.
         """
-        return self.data == other.data
+        return hasattr(other, 'data') and self.data == other.data
 
     def __hash__( self ):
         """

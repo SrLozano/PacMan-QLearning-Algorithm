@@ -1,5 +1,16 @@
 # ghostAgents.py
 # --------------
+# Licensing Information:  You are free to use or extend these projects for
+# educational purposes provided that (1) you do not distribute or publish
+# solutions, (2) you retain this notice, and (3) you provide clear
+# attribution to UC Berkeley.
+# 
+# Attribution Information: The Pacman AI projects were developed at UC Berkeley.
+# The core projects and autograders were primarily created by John DeNero
+# (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
+# Student side autograding was added by Brad Miller, Nick Hay, and
+# Pieter Abbeel (pabbeel@cs.berkeley.edu).
+
 
 from game import Agent
 from game import Actions
@@ -31,6 +42,10 @@ class RandomGhost( GhostAgent ):
         dist.normalize()
         return dist
 
+class StaticGhost( GhostAgent ):
+    def getDistribution( self, state):
+	return []
+
 class DirectionalGhost( GhostAgent ):
     "A ghost that prefers to rush Pacman, or flee when scared."
     def __init__( self, index, prob_attack=0.8, prob_scaredFlee=0.8 ):
@@ -54,6 +69,10 @@ class DirectionalGhost( GhostAgent ):
 
         # Select best actions given the state
         distancesToPacman = [manhattanDistance( pos, pacmanPosition ) for pos in newPositions]
+        
+        print(distancesToPacman)
+        print(isScared)
+        
         if isScared:
             bestScore = max( distancesToPacman )
             bestProb = self.prob_scaredFlee
