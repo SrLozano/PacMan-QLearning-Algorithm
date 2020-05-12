@@ -1275,15 +1275,17 @@ class QLearningAgent(BustersAgent):
             aux = 2   
         elif self.new_state[1] == "West":
             aux = 3  
+        elif self.new_state[1] == "Stop":
+            aux = 4      
         print("posicion x: " + str(self.new_state[0][0]))
         print("posicion y: " + str(self.new_state[0][1]))
         print("aux: " + str(aux))
-        print("el resultado es: " + str(((self.new_state[0][0]-1)*(state.data.layout.height-4)*4) + ((self.new_state[0][1]-1) * 4) + aux))
+        print("el resultado es: " + str(((self.new_state[0][0]-1)*(state.data.layout.height-3)*4) + ((self.new_state[0][1]-1) * 4) + aux))
         print("el ancho es: " + str(state.data.layout.width-2))
         print("el alto es: " + str(state.data.layout.height-4))
 
-        # return 0
-        return ((self.new_state[0][0]-1)*(state.data.layout.height-4)*4) + ((self.new_state[0][1]-1) * 4) + aux - 1
+        # He cambiado las restas a las ys TIENE SENTIDO CREO porque la posicion inicial es x:12 e y:3..... SOSPECHOSO. LA LINEA DE ARRIBA NO SE CUENTA
+        return ((self.new_state[0][0]-1)*(state.data.layout.height-4)*4) + ((self.new_state[0][1]-3) * 4) + aux - 1
         # (X * ALTO * NUMERO_ACCIONES) + (Y * NUMERO_ACCIONES ) + (ID_ACCION_ELEGIDA)      RESTAMOS 1 A LA X Y A LA Y PORQUE ELLOS EMPIEZAN EN 1 NO EN 0   
 
     def getQValue(self, state, action):

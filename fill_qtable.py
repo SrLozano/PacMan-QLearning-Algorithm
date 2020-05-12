@@ -6,6 +6,7 @@ teniendo en cuenta los calculos pues hay 6 posibles acciones (columnas)
 '''
 text_file = open("qtable.txt","w")
 salida = ""
+#El 5 es por las acciones posibles, es decir North, South, East, West
 alto = int(sys.argv[1])*int(sys.argv[2])*4
 ancho = 6
 for i in range(0, alto):
