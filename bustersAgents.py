@@ -1261,20 +1261,29 @@ class QLearningAgent(BustersAgent):
 	Compute the row of the qtable for a given state.
 	For instance, the state (3,1) is the row 7
 	"""
+        # new_state = ((x, y), direccion)
+        # Posicion Tabla Q = (( (fila*ancho + columna) * n_direcciones ) + idDireccion ) - 1 
         aux = 0
-        for i in self.q_table:
-            if q_table[i][0] == self.new_state
         
-        # for i in range(0, state.data.layout.width):
-        #     if i==self.new_state[0][0]:
-        #         for j in range(0, state.data.layout.height):
-        #             if j==self.new_state[0][1]:
-        #                 for action in self.actions:
-        #                     if action == self.new_state[1]
+        if self.new_state[1] == "North":
+            aux = 0
+        elif self.new_state[1] == "South":
+            aux = 1
+        elif self.new_state[1] == "East":
+            aux = 2   
+        elif self.new_state[1] == "West":
+            aux = 3  
+        print("posicion x: " + str(self.new_state[0][0]))
+        print("posicion y: " + str(self.new_state[0][1]))
+        print("aux: " + str(aux))
+        print("el resultado es: " + str(((((self.new_state[0][0] * state.data.layout.width) + self.new_state[0][1]) * 4) + aux) - 1))
+        print("el ancho es: " + str(state.data.layout.width))
 
-            #     pass
-            pass
-        return 0
+        # return 0
+        return ((((self.new_state[0][1] * (state.data.layout.width-2)) + self.new_state[0][0]) * 4) + aux) - 1
+
+   
+
 
     def getQValue(self, state, action):
 
@@ -1289,6 +1298,9 @@ class QLearningAgent(BustersAgent):
         print("Sin el 0")
         print(str(state.getLegalActions()))
         action_column = self.actions[action]
+        
+        print("La posicion es:" +  str(position))
+        print("La action_column es:" +  str(action_column))
 
         return self.q_table[position][action_column]
 
