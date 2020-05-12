@@ -1179,6 +1179,7 @@ class BasicAgentAA(BustersAgent):
 class QLearningAgent(BustersAgent):
 
     new_state = []
+
     def printLineData(self, gameState):
         return
         
@@ -1188,9 +1189,10 @@ class QLearningAgent(BustersAgent):
         self.actions = {"North":0, "East":1, "South":2, "West":3, "Exit":4, "Stop": 5}
         self.table_file = open("qtable.txt", "r+")
         self.q_table = self.readQtable()
-        self.epsilon = 1
+        self.epsilon = 0.2 #Probabilidad de que se mueva random
         self.alpha = 0.5
         self.discount = 0.9
+        self.past_state = None
 
     def registerInitialState(self, gameState):
         BustersAgent.registerInitialState(self, gameState)
@@ -1216,7 +1218,6 @@ class QLearningAgent(BustersAgent):
         table = table[:-1]
         return table
 
-
     """
       Q-Learning Agent
 
@@ -1229,10 +1230,9 @@ class QLearningAgent(BustersAgent):
         - self.discount (discount rate)
     """
     
-        
-
     def readQtable(self):
 	"Read qtable from disc"
+        print("Estamos en el readQtable")
         table = self.table_file.readlines()
         q_table = []
 
@@ -1245,6 +1245,7 @@ class QLearningAgent(BustersAgent):
 
     def writeQtable(self):
 	"Write qtable to disc"
+        print("Estamos en el writeQtable")
         self.table_file.seek(0)
         self.table_file.truncate()
 
@@ -1253,10 +1254,10 @@ class QLearningAgent(BustersAgent):
                 self.table_file.write(str(item)+" ")
             self.table_file.write("\n")
 
-    # def __del__(self):
-	# "Destructor. Invokation at the end of each episode"
-    #     self.writeQtable()
-    #     self.table_file.close()
+    def __del__(self):
+	"Destructor. Invokation at the end of each episode"
+        self.writeQtable()
+        self.table_file.close()
 
     def computePosition(self, state):
 	"""
@@ -1277,12 +1278,12 @@ class QLearningAgent(BustersAgent):
         print("posicion x: " + str(self.new_state[0][0]))
         print("posicion y: " + str(self.new_state[0][1]))
         print("aux: " + str(aux))
-        print("el resultado es: " + str((self.new_state[0][0]*(state.data.layout.height-4)*4) + (self.new_state[0][1] * 4) + aux))
+        print("el resultado es: " + str(((self.new_state[0][0]-1)*(state.data.layout.height-4)*4) + ((self.new_state[0][1]-1) * 4) + aux))
         print("el ancho es: " + str(state.data.layout.width-2))
         print("el alto es: " + str(state.data.layout.height-4))
 
         # return 0
-        return ((self.new_state[0][0]-1)*(state.data.layout.height-4)*4) + ((self.new_state[0][1]-1) * 4) + aux
+        return ((self.new_state[0][0]-1)*(state.data.layout.height-4)*4) + ((self.new_state[0][1]-1) * 4) + aux - 1
         # (X * ALTO * NUMERO_ACCIONES) + (Y * NUMERO_ACCIONES ) + (ID_ACCION_ELEGIDA)      RESTAMOS 1 A LA X Y A LA Y PORQUE ELLOS EMPIEZAN EN 1 NO EN 0   
 
     def getQValue(self, state, action):
@@ -1355,6 +1356,7 @@ class QLearningAgent(BustersAgent):
         
         # Pick Action
         legalActions = state.getLegalActions()
+        print("Las acciones legales son: " + str(legalActions))
         action = None
         if len(legalActions) == 0:
              return action
@@ -1364,7 +1366,13 @@ class QLearningAgent(BustersAgent):
         self.new_state.append(action)
         print(self.new_state)
         print("holaa\n")
-        # print(new_state)
+        print("La accion selecionada es: " + action)
+        if(self.past_state != None):
+            #Tienes que pasarle la action que de verdad va a realizar
+            print("Print en el if de past_state")
+            self.update(self.past_state, action, state, 1)
+        self.past_state = state
+
         
         flip = util.flipCoin(self.epsilon)
 
@@ -1473,12 +1481,15 @@ class QLearningAgent(BustersAgent):
         '''
         position = self.computePosition(state) #obtenemos la posicion correspondiente con el estado actual
         naction = self.actions[action] #obtenemos el identificador de la accion a tomar
-     	
+     	print("Actualizando la posicion: " + str(position) + " y la accion" + str(naction) + " y la reward " + str(reward))
+
+        #Esto habra que ver cunado se pasa que no esta claro jejeje
         if reward==1 or reward==-1: #el estado sera final si el refuerzo es 1 o -1
             self.q_table[position][naction] = (1-self.alpha) * self.q_table[position][naction] + self.alpha * (reward + 0)   
         else: #si el refuerzo es 0 entonces el estado sera no final
             self.q_table[position][naction] = (1-self.alpha) * self.q_table[position][naction] + self.alpha * (reward + self.discount * self.getValue(nextState))
-        print(str(state));  
+        print(str(state))
+  
 
     def getPolicy(self, state):
 	"Return the best action in the qtable for a given state"
