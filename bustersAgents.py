@@ -1188,7 +1188,9 @@ class QLearningAgent(BustersAgent):
         self.actions = {"North":0, "East":1, "South":2, "West":3, "Exit":4, "Stop": 5}
         self.table_file = open("qtable.txt", "r+")
         self.q_table = self.readQtable()
-        self.epsilon = 0.05
+        self.epsilon = 1
+        self.alpha = 0.5
+        self.discount = 0.9
 
     def registerInitialState(self, gameState):
         BustersAgent.registerInitialState(self, gameState)
@@ -1262,7 +1264,6 @@ class QLearningAgent(BustersAgent):
 	For instance, the state (3,1) is the row 7
 	"""
         # new_state = ((x, y), direccion)
-        # Posicion Tabla Q = (( (fila*ancho + columna) * n_direcciones ) + idDireccion ) - 1 
         aux = 0
         
         if self.new_state[1] == "North":
@@ -1276,14 +1277,13 @@ class QLearningAgent(BustersAgent):
         print("posicion x: " + str(self.new_state[0][0]))
         print("posicion y: " + str(self.new_state[0][1]))
         print("aux: " + str(aux))
-        print("el resultado es: " + str(((((self.new_state[0][0] * state.data.layout.width) + self.new_state[0][1]) * 4) + aux) - 1))
-        print("el ancho es: " + str(state.data.layout.width))
+        print("el resultado es: " + str((self.new_state[0][0]*(state.data.layout.height-4)*4) + (self.new_state[0][1] * 4) + aux))
+        print("el ancho es: " + str(state.data.layout.width-2))
+        print("el alto es: " + str(state.data.layout.height-4))
 
         # return 0
-        return ((((self.new_state[0][1] * (state.data.layout.width-2)) + self.new_state[0][0]) * 4) + aux) - 1
-
-   
-
+        return ((self.new_state[0][0]-1)*(state.data.layout.height-4)*4) + ((self.new_state[0][1]-1) * 4) + aux
+        # (X * ALTO * NUMERO_ACCIONES) + (Y * NUMERO_ACCIONES ) + (ID_ACCION_ELEGIDA)      RESTAMOS 1 A LA X Y A LA Y PORQUE ELLOS EMPIEZAN EN 1 NO EN 0   
 
     def getQValue(self, state, action):
 
