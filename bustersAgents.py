@@ -27,6 +27,7 @@ from keyboardAgents import KeyboardAgent
 # from wekaI import Weka
 import inference
 import busters
+import copy
 
 fixed_action = ""
 
@@ -1264,7 +1265,30 @@ class QLearningAgent(BustersAgent):
 	Compute the row of the qtable for a given state.
 	For instance, the state (3,1) is the row 7
 	"""
-        # new_state = ((x, y), direccion)
+        # # new_state = ((x, y), direccion)
+        # aux = 0
+        
+        # if self.new_state[1] == "North":
+        #     aux = 0
+        # elif self.new_state[1] == "South":
+        #     aux = 1
+        # elif self.new_state[1] == "East":
+        #     aux = 2   
+        # elif self.new_state[1] == "West":
+        #     aux = 3  
+        # elif self.new_state[1] == "Stop":
+        #     aux = 4      
+        # print("posicion x: " + str(self.new_state[0][0]))
+        # print("posicion y: " + str(self.new_state[0][1]))
+        # print("aux: " + str(aux))
+        # print("el resultado es: " + str(((self.new_state[0][0]-1)*(state.data.layout.height-3)*4) + ((self.new_state[0][1]-1) * 4) + aux))
+        # print("el ancho es: " + str(state.data.layout.width-2))
+        # print("el alto es: " + str(state.data.layout.height-4))
+
+        # # He cambiado las restas a las ys TIENE SENTIDO CREO porque la posicion inicial es x:12 e y:3..... SOSPECHOSO. LA LINEA DE ARRIBA NO SE CUENTA
+        # return ((self.new_state[0][0]-1)*(state.data.layout.height-4)*4) + ((self.new_state[0][1]-3) * 4) + aux - 1
+        # # (X * ALTO * NUMERO_ACCIONES) + (Y * NUMERO_ACCIONES ) + (ID_ACCION_ELEGIDA)      RESTAMOS 1 A LA X Y A LA Y PORQUE ELLOS EMPIEZAN EN 1 NO EN 0   
+       
         aux = 0
         
         if self.new_state[1] == "North":
@@ -1277,16 +1301,9 @@ class QLearningAgent(BustersAgent):
             aux = 3  
         elif self.new_state[1] == "Stop":
             aux = 4      
-        print("posicion x: " + str(self.new_state[0][0]))
-        print("posicion y: " + str(self.new_state[0][1]))
-        print("aux: " + str(aux))
-        print("el resultado es: " + str(((self.new_state[0][0]-1)*(state.data.layout.height-3)*4) + ((self.new_state[0][1]-1) * 4) + aux))
-        print("el ancho es: " + str(state.data.layout.width-2))
-        print("el alto es: " + str(state.data.layout.height-4))
 
-        # He cambiado las restas a las ys TIENE SENTIDO CREO porque la posicion inicial es x:12 e y:3..... SOSPECHOSO. LA LINEA DE ARRIBA NO SE CUENTA
-        return ((self.new_state[0][0]-1)*(state.data.layout.height-4)*4) + ((self.new_state[0][1]-3) * 4) + aux - 1
-        # (X * ALTO * NUMERO_ACCIONES) + (Y * NUMERO_ACCIONES ) + (ID_ACCION_ELEGIDA)      RESTAMOS 1 A LA X Y A LA Y PORQUE ELLOS EMPIEZAN EN 1 NO EN 0   
+        print("el resultado es: "  + str((self.new_state[0]*4) + aux))
+        return (self.new_state[0]*4) + aux
 
     def getQValue(self, state, action):
 
@@ -1352,27 +1369,29 @@ class QLearningAgent(BustersAgent):
         """
         self.new_state = []
         
-        self.new_state.append(state.getPacmanPosition())
+        # self.new_state.append(state.getPacmanPosition())
         # print("holaa\n")
         # print(new_state)
         
         # Pick Action
         legalActions = state.getLegalActions()
         print("Las acciones legales son: " + str(legalActions))
-        action = None
+        # action = []
         if len(legalActions) == 0:
-             return action
+             return self.new_state 
         else:
-            action = self.calculateBestDirection(state)
+            self.new_state = copy.deepcopy(self.calculateBestDirection(state))
 
-        self.new_state.append(action)
+        # new_state = copy.deepcopy(action)
+        
+        # print(action)
         print(self.new_state)
         print("holaa\n")
-        print("La accion selecionada es: " + action)
+        # print("La accion selecionada es: " + str(action))
         if(self.past_state != None):
             #Tienes que pasarle la action que de verdad va a realizar
             print("Print en el if de past_state")
-            self.update(self.past_state, action, state, 1)
+            self.update(self.past_state, state, 1)
         self.past_state = state
 
         
@@ -1385,7 +1404,7 @@ class QLearningAgent(BustersAgent):
     def calculateBestDirection(self, state):
         # legal = gameState.getLegalActions(0) #Legal position from the pacman
         legal = state.getLegalActions()
-        ret = None
+        ret = []
         i_min = -1
         min = 1000000
 
@@ -1400,70 +1419,76 @@ class QLearningAgent(BustersAgent):
         difX = PacMan_pos[0] - ClosestGhost[0]
         difY = PacMan_pos[1] - ClosestGhost[1]
 
+        if(difX>difY):
+            ret.append(difX)
+        else:
+            ret.append(difY)
+        
+
         if difX >= 0 and difY >= 0:
             if ((difX < difY and difX!=0) or difY==0) and Directions.WEST in legal:
-                ret = Directions.WEST
+                ret.append( Directions.WEST)
             elif Directions.SOUTH in legal:
-                ret = Directions.SOUTH
+                ret.append(  Directions.SOUTH)
             else:
                 move_random = random.randint(0, 1)
                 if   ( move_random == 0 ) and Directions.EAST in legal:    
-                    ret = Directions.EAST
+                    ret.append( Directions.EAST)
                     self.fixed_action = Directions.EAST
                 if   ( move_random == 1 ) and Directions.NORTH in legal:   
-                    ret = Directions.NORTH
+                    ret.append(  Directions.NORTH)
                     self.fixed_action = Directions.NORTH
                 self.random_movements = 5
 
         elif difX >= 0 and difY <= 0:
             if ((difX < difY and difX!=0) or difY==0) and Directions.WEST in legal:
-                ret = Directions.WEST
+                ret.append( Directions.WEST)
             elif Directions.NORTH in legal:
-                ret = Directions.NORTH
+                ret.append( Directions.NORTH)
             else:
                 move_random = random.randint(0, 1)
                 if   ( move_random == 0 ) and Directions.EAST in legal: 
-                    ret = Directions.EAST
+                    ret.append( Directions.EAST)
                     self.fixed_action = Directions.EAST
                 if   ( move_random == 1 ) and Directions.SOUTH in legal:  
-                    ret = Directions.SOUTH
+                    ret.append(  Directions.SOUTH)
                     self.fixed_action = Directions.SOUTH
                 self.random_movements = 5
 
         elif difX <= 0 and difY >= 0:
             if ((difX < difY and difX!=0) or difY==0) and Directions.EAST in legal:
-                ret = Directions.EAST
+                ret.append( Directions.EAST)
             elif Directions.SOUTH in legal:
-                ret = Directions.SOUTH
+                ret.append( Directions.SOUTH)
             else:
                 move_random = random.randint(0, 1)
                 if   ( move_random == 0 ) and Directions.WEST in legal: 
-                    ret = Directions.WEST
+                    ret.append(  Directions.WEST)
                     self.fixed_action = Directions.WEST
                     
                 if   ( move_random == 1 ) and Directions.NORTH in legal:   
-                    ret = Directions.NORTH
+                    ret.append( Directions.NORTH)
                     self.fixed_action = Directions.NORTH
                 self.random_movements = 5
 
         elif difX <= 0 and difY <= 0:
             if ((difX < difY and difX!=0) or difY==0) and Directions.EAST in legal:
-                ret = Directions.EAST
+                ret.append( Directions.EAST)
             elif Directions.NORTH in legal:
-                ret = Directions.NORTH
+                ret.append(  Directions.NORTH)
             else:
                 move_random = random.randint(0, 1)
                 if   ( move_random == 0 ) and Directions.WEST in legal: 
-                    ret = Directions.WEST
+                    ret.append( Directions.WEST)
                     self.fixed_action = Directions.WEST
                 if   ( move_random == 1 ) and Directions.SOUTH in legal:   
-                    ret = Directions.SOUTH
+                    ret.append( Directions.SOUTH)
                     self.fixed_action = Directions.SOUTH
                 self.random_movements = 5
         
         return ret
 
-    def update(self, state, action, nextState, reward):
+    def update(self, state, nextState, reward):
         '''
             The parent class calls this to observe a
             state = action => nextState and reward transition.
@@ -1482,7 +1507,7 @@ class QLearningAgent(BustersAgent):
 
         '''
         position = self.computePosition(state) #obtenemos la posicion correspondiente con el estado actual
-        naction = self.actions[action] #obtenemos el identificador de la accion a tomar
+        naction = self.actions[self.new_state[1]] #obtenemos el identificador de la accion a tomar
      	print("Actualizando la posicion: " + str(position) + " y la accion" + str(naction) + " y la reward " + str(reward))
 
         #Esto habra que ver cunado se pasa que no esta claro jejeje
