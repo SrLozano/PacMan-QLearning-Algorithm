@@ -1191,8 +1191,8 @@ class QLearningAgent(BustersAgent):
         self.table_file = open("qtable.txt", "r+")
         self.q_table = self.readQtable()
         self.epsilon = 0.2 #Probabilidad de que se mueva random
-        self.alpha = 0.5
-        self.discount = 0.9
+        self.alpha = 0.5 #Tasa de aprendizaje representa como de agresivo es el aprendizaje 
+        self.discount = 0.9 #Factor de descuento para dar mas importancia a las recompensas mas inmediatas
         self.past_state = None
 
     def registerInitialState(self, gameState):
@@ -1302,7 +1302,9 @@ class QLearningAgent(BustersAgent):
         elif self.new_state[1] == "Stop":
             aux = 4      
 
-        print("el resultado es: "  + str((self.new_state[0]*4) + aux))
+        print("La posicion que obtengo es: " + str((self.new_state[0]*4) + aux))
+        print("El estado que me pasan es  " + str(self.new_state))
+        # print("el resultado es: "  + str((self.new_state[0]*4) + aux))
         return (self.new_state[0]*4) + aux
 
     def getQValue(self, state, action):
@@ -1313,14 +1315,14 @@ class QLearningAgent(BustersAgent):
           or the Q node value otherwise
         """
         position = self.computePosition(state)
-        print("Con el 0")
+        # print("Con el 0")
         print(str(state.getLegalActions(0)))
-        print("Sin el 0")
+        # print("Sin el 0")
         print(str(state.getLegalActions()))
         action_column = self.actions[action]
         
-        print("La posicion es:" +  str(position))
-        print("La action_column es:" +  str(action_column))
+        # print("La posicion es:" +  str(position))
+        # print("La action_column es:" +  str(action_column))
 
         return self.q_table[position][action_column]
 
@@ -1332,9 +1334,10 @@ class QLearningAgent(BustersAgent):
           there are no legal actions, which is the case at the
           terminal state, you should return a value of 0.0.
         """
-     	legalActions = self.getLegalActions(state)
+     	legalActions = state.getLegalActions()
         if len(legalActions)==0:
           return 0
+        print("Entra en el computeValueFromQValues")  
         return max(self.q_table[self.computePosition(state)])
 
     def computeActionFromQValues(self, state):
@@ -1385,13 +1388,26 @@ class QLearningAgent(BustersAgent):
         # new_state = copy.deepcopy(action)
         
         # print(action)
-        print(self.new_state)
-        print("holaa\n")
+        print("new_state de getaction: " + str(self.new_state))
+        # print(str(legalActions))
+        # print(self.new_state)
+        # print("holaa\n")
+        reward = 0
+        ghostPositions = state.getGhostPositions()
         # print("La accion selecionada es: " + str(action))
         if(self.past_state != None):
             #Tienes que pasarle la action que de verdad va a realizar
             print("Print en el if de past_state")
-            self.update(self.past_state, state, 1)
+            for i in ghostPositions:
+                print("Vamos a actualizar el reward")
+                print("lo que tenemos es: " + str(i))
+                if i[0] == state.getPacmanPosition()[0] and i[1] == state.getPacmanPosition()[1]:
+                    # Si Pac-Man se come un fantasma consigue una recompensa de 1 punto
+                    print("AQUIIIIIIIIIIIII")
+                    print("lo que tenemos es: " + str(i))
+                    reward = 1
+            self.update(self.past_state, state, reward)
+
         self.past_state = state
 
         
@@ -1419,25 +1435,35 @@ class QLearningAgent(BustersAgent):
         difX = PacMan_pos[0] - ClosestGhost[0]
         difY = PacMan_pos[1] - ClosestGhost[1]
 
-        if(difX>difY):
-            ret.append(difX)
+        if(abs(difX)<abs(difY)):
+            ret.append(abs(difX))
         else:
-            ret.append(difY)
+            ret.append(abs(difY))
         
 
         if difX >= 0 and difY >= 0:
+            # print("aqui1")
             if ((difX < difY and difX!=0) or difY==0) and Directions.WEST in legal:
                 ret.append( Directions.WEST)
             elif Directions.SOUTH in legal:
                 ret.append(  Directions.SOUTH)
             else:
                 move_random = random.randint(0, 1)
-                if   ( move_random == 0 ) and Directions.EAST in legal:    
-                    ret.append( Directions.EAST)
-                    self.fixed_action = Directions.EAST
-                if   ( move_random == 1 ) and Directions.NORTH in legal:   
-                    ret.append(  Directions.NORTH)
-                    self.fixed_action = Directions.NORTH
+                if ( move_random == 0 ):
+                    if  Directions.EAST in legal:    
+                        ret.append( Directions.EAST)
+                        self.fixed_action = Directions.EAST
+                    else:
+                        ret.append( Directions.NORTH)
+                        self.fixed_action = Directions.NORTH        
+
+                if   ( move_random == 1 ):      
+                    if  Directions.NORTH in legal:   
+                        ret.append(  Directions.NORTH)
+                        self.fixed_action = Directions.NORTH
+                    else:
+                        ret.append( Directions.EAST)
+                        self.fixed_action = Directions.EAST     
                 self.random_movements = 5
 
         elif difX >= 0 and difY <= 0:
@@ -1447,12 +1473,22 @@ class QLearningAgent(BustersAgent):
                 ret.append( Directions.NORTH)
             else:
                 move_random = random.randint(0, 1)
-                if   ( move_random == 0 ) and Directions.EAST in legal: 
-                    ret.append( Directions.EAST)
-                    self.fixed_action = Directions.EAST
-                if   ( move_random == 1 ) and Directions.SOUTH in legal:  
-                    ret.append(  Directions.SOUTH)
-                    self.fixed_action = Directions.SOUTH
+                if ( move_random == 0 ):
+                    if  Directions.EAST in legal: 
+                        ret.append( Directions.EAST)
+                        self.fixed_action = Directions.EAST
+                    else: 
+                        ret.append( Directions.SOUTH)
+                        self.fixed_action = Directions.SOUTH
+
+                if   ( move_random == 1 ):  
+                    if   Directions.SOUTH in legal:  
+                        ret.append( Directions.SOUTH)
+                        self.fixed_action = Directions.SOUTH
+                    else:
+                        ret.append( Directions.EAST)
+                        self.fixed_action = Directions.EAST
+
                 self.random_movements = 5
 
         elif difX <= 0 and difY >= 0:
@@ -1462,13 +1498,21 @@ class QLearningAgent(BustersAgent):
                 ret.append( Directions.SOUTH)
             else:
                 move_random = random.randint(0, 1)
-                if   ( move_random == 0 ) and Directions.WEST in legal: 
-                    ret.append(  Directions.WEST)
-                    self.fixed_action = Directions.WEST
-                    
-                if   ( move_random == 1 ) and Directions.NORTH in legal:   
-                    ret.append( Directions.NORTH)
-                    self.fixed_action = Directions.NORTH
+                if ( move_random == 0 ):
+                    if Directions.WEST in legal: 
+                        ret.append(  Directions.WEST)
+                        self.fixed_action = Directions.WEST
+                    else: 
+                        ret.append( Directions.NORTH)
+                        self.fixed_action = Directions.NORTH
+                        
+                if   ( move_random == 1 ):   
+                    if  Directions.NORTH in legal:   
+                        ret.append( Directions.NORTH)
+                        self.fixed_action = Directions.NORTH
+                    else:
+                        ret.append( Directions.WEST)
+                        self.fixed_action = Directions.WEST    
                 self.random_movements = 5
 
         elif difX <= 0 and difY <= 0:
@@ -1478,12 +1522,22 @@ class QLearningAgent(BustersAgent):
                 ret.append(  Directions.NORTH)
             else:
                 move_random = random.randint(0, 1)
-                if   ( move_random == 0 ) and Directions.WEST in legal: 
-                    ret.append( Directions.WEST)
-                    self.fixed_action = Directions.WEST
-                if   ( move_random == 1 ) and Directions.SOUTH in legal:   
-                    ret.append( Directions.SOUTH)
-                    self.fixed_action = Directions.SOUTH
+                if ( move_random == 0 ):
+                    if Directions.WEST in legal: 
+                        ret.append( Directions.WEST)
+                        self.fixed_action = Directions.WEST
+                    else:
+                        ret.append( Directions.SOUTH)
+                        self.fixed_action = Directions.SOUTH
+
+                if   ( move_random == 1 ) :
+                    if Directions.SOUTH in legal:   
+                        ret.append( Directions.SOUTH)
+                        self.fixed_action = Directions.SOUTH
+                    else:
+                        ret.append( Directions.WEST)
+                        self.fixed_action = Directions.WEST
+                        
                 self.random_movements = 5
         
         return ret
@@ -1508,12 +1562,13 @@ class QLearningAgent(BustersAgent):
         '''
         position = self.computePosition(state) #obtenemos la posicion correspondiente con el estado actual
         naction = self.actions[self.new_state[1]] #obtenemos el identificador de la accion a tomar
-     	print("Actualizando la posicion: " + str(position) + " y la accion" + str(naction) + " y la reward " + str(reward))
-
+     	print("Actualizando la posicion: " + str(position) + " y la accion " + str(naction) + " y la reward " + str(reward))
         #Esto habra que ver cunado se pasa que no esta claro jejeje
         if reward==1 or reward==-1: #el estado sera final si el refuerzo es 1 o -1
-            self.q_table[position][naction] = (1-self.alpha) * self.q_table[position][naction] + self.alpha * (reward + 0)   
+            self.q_table[position][naction] = (1-self.alpha) * self.q_table[position][naction] + self.alpha * (reward + 0)
+            print("El valor actualizado es: " + str(self.q_table[position][naction]))   
         else: #si el refuerzo es 0 entonces el estado sera no final
+            print("Este es el ELSE de update")
             self.q_table[position][naction] = (1-self.alpha) * self.q_table[position][naction] + self.alpha * (reward + self.discount * self.getValue(nextState))
         print(str(state))
   
@@ -1527,14 +1582,15 @@ class QLearningAgent(BustersAgent):
         return self.computeValueFromQValues(state)
 
     def chooseAction(self, gameState):
-        move = Directions.STOP
-        legal = gameState.getLegalActions(0) ##Legal position from the pacman
-        move_random = random.randint(0, 3)
-        if   ( move_random == 0 ) and Directions.WEST in legal:  move = Directions.WEST
-        if   ( move_random == 1 ) and Directions.EAST in legal: move = Directions.EAST
-        if   ( move_random == 2 ) and Directions.NORTH in legal:   move = Directions.NORTH
-        if   ( move_random == 3 ) and Directions.SOUTH in legal: move = Directions.SOUTH
-        return move
+        pass
+        # move = Directions.STOP
+        # legal = gameState.getLegalActions(0) ##Legal position from the pacman
+        # move_random = random.randint(0, 3)
+        # if   ( move_random == 0 ) and Directions.WEST in legal:  move = Directions.WEST
+        # if   ( move_random == 1 ) and Directions.EAST in legal: move = Directions.EAST
+        # if   ( move_random == 2 ) and Directions.NORTH in legal:   move = Directions.NORTH
+        # if   ( move_random == 3 ) and Directions.SOUTH in legal: move = Directions.SOUTH
+        # return move
 
     #-----------------------------AGENTE AUTOMATICO TUTORIAL 1-----------------------------# 
     '''self.countActions = self.countActions + 1

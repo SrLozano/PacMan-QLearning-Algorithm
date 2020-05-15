@@ -8,7 +8,7 @@ text_file = open("qtable.txt","w")
 salida = ""
 max = -1
 
-if int(sys.argv[1]) > int(sys.argv[2]):
+if int(sys.argv[1]) < int(sys.argv[2]):
     max = 4* int(sys.argv[1])
     print("el maximo es: " + str(sys.argv[1]))
 else:
