@@ -1302,8 +1302,8 @@ class QLearningAgent(BustersAgent):
         elif self.new_state[1] == "Stop":
             aux = 4      
 
-        print("La posicion que obtengo es: " + str((self.new_state[0]*4) + aux))
-        print("El estado que me pasan es  " + str(self.new_state))
+        #print("La posicion que obtengo es: " + str((self.new_state[0]*4) + aux))
+        #print("El estado que me pasan es  " + str(self.new_state))
         # print("el resultado es: "  + str((self.new_state[0]*4) + aux))
         return (self.new_state[0]*4) + aux
 
@@ -1316,9 +1316,9 @@ class QLearningAgent(BustersAgent):
         """
         position = self.computePosition(state)
         # print("Con el 0")
-        print(str(state.getLegalActions(0)))
+        #print(str(state.getLegalActions(0)))
         # print("Sin el 0")
-        print(str(state.getLegalActions()))
+        #print(str(state.getLegalActions()))
         action_column = self.actions[action]
         
         # print("La posicion es:" +  str(position))
@@ -1337,7 +1337,7 @@ class QLearningAgent(BustersAgent):
      	legalActions = state.getLegalActions()
         if len(legalActions)==0:
           return 0
-        print("Entra en el computeValueFromQValues")  
+        #print("Entra en el computeValueFromQValues")  
         return max(self.q_table[self.computePosition(state)])
 
     def computeActionFromQValues(self, state):
@@ -1359,7 +1359,7 @@ class QLearningAgent(BustersAgent):
             if value > best_value:
                 best_actions = [action]
                 best_value = value
-
+        print("La best action es: " + str(best_actions))
         return random.choice(best_actions)
 
     def getAction(self, state):
@@ -1378,7 +1378,7 @@ class QLearningAgent(BustersAgent):
         
         # Pick Action
         legalActions = state.getLegalActions()
-        print("Las acciones legales son: " + str(legalActions))
+        #print("Las acciones legales son: " + str(legalActions))
         # action = []
         if len(legalActions) == 0:
              return self.new_state 
@@ -1388,27 +1388,30 @@ class QLearningAgent(BustersAgent):
         # new_state = copy.deepcopy(action)
         
         # print(action)
-        print("new_state de getaction: " + str(self.new_state))
+        #print("new_state de getaction: " + str(self.new_state))
         # print(str(legalActions))
         # print(self.new_state)
         # print("holaa\n")
-        reward = 0
+        reward = 1
         ghostPositions = state.getGhostPositions()
         # print("La accion selecionada es: " + str(action))
         if(self.past_state != None):
             #Tienes que pasarle la action que de verdad va a realizar
-            print("Print en el if de past_state")
+            #print("Print en el if de past_state")
             for i in ghostPositions:
-                print("Vamos a actualizar el reward")
-                print("lo que tenemos es: " + str(i))
+                #print("Vamos a actualizar el reward")
+                print("La posicion del fantasmas es: " + str(i))
+                #print("Los living Ghost son: " + str(state.getLivingGhosts()))
+                print("La posicion del pacman es: " + str(self.past_state.getPacmanPosition()[0]) + " y la otra " + str(self.past_state.getPacmanPosition()[1]))
                 if i[0] == state.getPacmanPosition()[0] and i[1] == state.getPacmanPosition()[1]:
                     # Si Pac-Man se come un fantasma consigue una recompensa de 1 punto
-                    print("AQUIIIIIIIIIIIII")
-                    print("lo que tenemos es: " + str(i))
+                    #print("AQUIIIIIIIIIIIII")
+                    #print("lo que tenemos es: " + str(i))
                     reward = 1
             self.update(self.past_state, state, reward)
-
-        self.past_state = state
+        
+        self.past_state = copy.deepcopy(state)
+        #self.past_state = state
 
         
         flip = util.flipCoin(self.epsilon)
@@ -1562,13 +1565,14 @@ class QLearningAgent(BustersAgent):
         '''
         position = self.computePosition(state) #obtenemos la posicion correspondiente con el estado actual
         naction = self.actions[self.new_state[1]] #obtenemos el identificador de la accion a tomar
-     	print("Actualizando la posicion: " + str(position) + " y la accion " + str(naction) + " y la reward " + str(reward))
+     	#print("Actualizando la posicion: " + str(position) + " y la accion " + str(naction) + " y la reward " + str(reward))
         #Esto habra que ver cunado se pasa que no esta claro jejeje
         if reward==1 or reward==-1: #el estado sera final si el refuerzo es 1 o -1
             self.q_table[position][naction] = (1-self.alpha) * self.q_table[position][naction] + self.alpha * (reward + 0)
-            print("El valor actualizado es: " + str(self.q_table[position][naction]))   
+            #print("El valor actualizado es: " + str(self.q_table[position][naction]))   
         else: #si el refuerzo es 0 entonces el estado sera no final
-            print("Este es el ELSE de update")
+            #print("Este es el ELSE de update")
+            #print("Lo ultimo es: " + str(self.getValue(nextState)))
             self.q_table[position][naction] = (1-self.alpha) * self.q_table[position][naction] + self.alpha * (reward + self.discount * self.getValue(nextState))
         print(str(state))
   
