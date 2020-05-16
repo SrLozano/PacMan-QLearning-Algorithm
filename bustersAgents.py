@@ -1180,6 +1180,7 @@ class BasicAgentAA(BustersAgent):
 class QLearningAgent(BustersAgent):
 
     new_state = []
+    living = 0
 
     def printLineData(self, gameState):
         return
@@ -1190,7 +1191,7 @@ class QLearningAgent(BustersAgent):
         self.actions = {"North":0, "East":1, "South":2, "West":3, "Exit":4, "Stop": 5}
         self.table_file = open("qtable.txt", "r+")
         self.q_table = self.readQtable()
-        self.epsilon = 0.2 #Probabilidad de que se mueva random
+        self.epsilon = 0 #Probabilidad de que se mueva random
         self.alpha = 0.5 #Tasa de aprendizaje representa como de agresivo es el aprendizaje 
         self.discount = 0.9 #Factor de descuento para dar mas importancia a las recompensas mas inmediatas
         self.past_state = None
@@ -1198,6 +1199,10 @@ class QLearningAgent(BustersAgent):
     def registerInitialState(self, gameState):
         BustersAgent.registerInitialState(self, gameState)
         self.distancer = Distancer(gameState.data.layout, False)
+        for i in gameState.getLivingGhosts():
+            if i:
+                self.living = self.living + 1
+        # print("Los fantasmas vivos son: " + str(self.living))
 
     ''' Example of counting something'''
     def countFood(self, gameState):
@@ -1233,7 +1238,7 @@ class QLearningAgent(BustersAgent):
     
     def readQtable(self):
 	"Read qtable from disc"
-        print("Estamos en el readQtable")
+        # print("Estamos en el readQtable")
         table = self.table_file.readlines()
         q_table = []
 
@@ -1246,7 +1251,7 @@ class QLearningAgent(BustersAgent):
 
     def writeQtable(self):
 	"Write qtable to disc"
-        print("Estamos en el writeQtable")
+        # print("Estamos en el writeQtable")
         self.table_file.seek(0)
         self.table_file.truncate()
 
@@ -1257,6 +1262,7 @@ class QLearningAgent(BustersAgent):
 
     def __del__(self):
 	"Destructor. Invokation at the end of each episode"
+        # print(self.q_table)
         self.writeQtable()
         self.table_file.close()
 
@@ -1350,16 +1356,20 @@ class QLearningAgent(BustersAgent):
         if len(legalActions)==0:
           return None
 
-        best_actions = [legalActions[0]]
+        #POR QUE LO INICIALIZAN ASI
+        # best_actions = [legalActions[0]]
+        best_actions = []
         best_value = self.getQValue(state, legalActions[0])
+        # print("inicializar best action: " + str(best_actions))
         for action in legalActions:
+            # print("aqui: " + str(action))
             value = self.getQValue(state, action)
             if value == best_value:
                 best_actions.append(action)
             if value > best_value:
                 best_actions = [action]
                 best_value = value
-        print("La best action es: " + str(best_actions))
+        # print("La best action es: " + str(best_actions))
         return random.choice(best_actions)
 
     def getAction(self, state):
@@ -1392,32 +1402,64 @@ class QLearningAgent(BustersAgent):
         # print(str(legalActions))
         # print(self.new_state)
         # print("holaa\n")
-        reward = 1
+        reward = 0
         ghostPositions = state.getGhostPositions()
+
         # print("La accion selecionada es: " + str(action))
         if(self.past_state != None):
+            aux = 0
+            for i in state.getLivingGhosts():
+                if i==True:
+                    aux = aux + 1
+            if aux < self.living and aux==0:
+                reward = 1.0
+                self.living = aux
+                print("Me he comido y acabo, tengo reward " + str(reward) + " y hay " + str(self.living) + " fantasmas vivos")
+            elif aux < self.living and aux!=0:
+                reward = 0.99
+                self.living = aux
+                print("Me he comido uno pero no acabo, tengo reward " + str(reward) + " y hay " + str(self.living) + " fantasmas vivos")
+            else:
+                # print("Sigo intentando comerme a un fantasma")
+                min = 1000000
+                for i in range(0, len(state.data.ghostDistances)):
+                    if state.data.ghostDistances[i] != None and state.data.ghostDistances[i]< min:
+                        min = state.data.ghostDistances[i]
+                distance = max((state.data.layout.width-2), (state.data.layout.height-4))
+                reward = 1.0/(min+1.0)
+                print("Con distancia " + str(min) + " he obtenido un reward de " + str(reward))
+            # print("La recompensa es: " + str(reward))
+            # print("El estado es: " + str(self.new_state))
+            # print("Hay " +str(self.living) + " fantasmas vivos")
+            self.update(self.past_state, state, reward)
+        # else:
+        #     for i in state.getLivingGhosts():
+        #         if i=="True":
+        #             self.living = self.living + 1
+        #     print("Los fantasmas vivos son: " + str(self.living))
+
+           
             #Tienes que pasarle la action que de verdad va a realizar
             #print("Print en el if de past_state")
-            for i in ghostPositions:
-                #print("Vamos a actualizar el reward")
-                print("La posicion del fantasmas es: " + str(i))
-                #print("Los living Ghost son: " + str(state.getLivingGhosts()))
-                print("La posicion del pacman es: " + str(self.past_state.getPacmanPosition()[0]) + " y la otra " + str(self.past_state.getPacmanPosition()[1]))
-                if i[0] == state.getPacmanPosition()[0] and i[1] == state.getPacmanPosition()[1]:
-                    # Si Pac-Man se come un fantasma consigue una recompensa de 1 punto
-                    #print("AQUIIIIIIIIIIIII")
-                    #print("lo que tenemos es: " + str(i))
-                    reward = 1
-            self.update(self.past_state, state, reward)
+            # for i in ghostPositions:
+            #     #print("Vamos a actualizar el reward")
+            #     print("La posicion del fantasmas es: " + str(i))
+            #     #print("Los living Ghost son: " + str(state.getLivingGhosts()))
+            #     print("La posicion del pacman es: " + str(self.past_state.getPacmanPosition()[0]) + " y la otra " + str(self.past_state.getPacmanPosition()[1]))
+            #     # if i[0] == state.getPacmanPosition()[0] and i[1] == state.getPacmanPosition()[1]:
+            #         # Si Pac-Man se come un fantasma consigue una recompensa de 1 punto
+            #         #print("AQUIIIIIIIIIIIII")
+            #         #print("lo que tenemos es: " + str(i))
+            #         reward = 1
+            
         
         self.past_state = copy.deepcopy(state)
         #self.past_state = state
 
-        
         flip = util.flipCoin(self.epsilon)
 
         if flip:
-		return random.choice(legalActions)
+		    return random.choice(legalActions)
         return self.getPolicy(state)
 
     def calculateBestDirection(self, state):
@@ -1565,16 +1607,15 @@ class QLearningAgent(BustersAgent):
         '''
         position = self.computePosition(state) #obtenemos la posicion correspondiente con el estado actual
         naction = self.actions[self.new_state[1]] #obtenemos el identificador de la accion a tomar
+        # print("El estado es: " + str(self.new_state))
+
      	#print("Actualizando la posicion: " + str(position) + " y la accion " + str(naction) + " y la reward " + str(reward))
         #Esto habra que ver cunado se pasa que no esta claro jejeje
-        if reward==1 or reward==-1: #el estado sera final si el refuerzo es 1 o -1
+        if reward==1.0: #el estado sera final si el refuerzo es 1 o -1
             self.q_table[position][naction] = (1-self.alpha) * self.q_table[position][naction] + self.alpha * (reward + 0)
-            #print("El valor actualizado es: " + str(self.q_table[position][naction]))   
         else: #si el refuerzo es 0 entonces el estado sera no final
-            #print("Este es el ELSE de update")
-            #print("Lo ultimo es: " + str(self.getValue(nextState)))
             self.q_table[position][naction] = (1-self.alpha) * self.q_table[position][naction] + self.alpha * (reward + self.discount * self.getValue(nextState))
-        print(str(state))
+        # print(str(state))
   
 
     def getPolicy(self, state):
