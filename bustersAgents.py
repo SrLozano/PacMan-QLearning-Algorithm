@@ -1179,8 +1179,9 @@ class BasicAgentAA(BustersAgent):
 
 class QLearningAgent(BustersAgent):
 
-    new_state = []
     living = 0
+    choosen_action = ""
+    best_direction = [0, "Stop"] # Es un array que me guarda la mejor direccion a tomar
 
     def printLineData(self, gameState):
         return
@@ -1191,7 +1192,7 @@ class QLearningAgent(BustersAgent):
         self.actions = {"North":0, "East":1, "South":2, "West":3, "Exit":4, "Stop": 5}
         self.table_file = open("qtable.txt", "r+")
         self.q_table = self.readQtable()
-        self.epsilon = 0 #Probabilidad de que se mueva random
+        self.epsilon = 0.2 #Probabilidad de que se mueva random
         self.alpha = 0.5 #Tasa de aprendizaje representa como de agresivo es el aprendizaje 
         self.discount = 0.9 #Factor de descuento para dar mas importancia a las recompensas mas inmediatas
         self.past_state = None
@@ -1199,6 +1200,7 @@ class QLearningAgent(BustersAgent):
     def registerInitialState(self, gameState):
         BustersAgent.registerInitialState(self, gameState)
         self.distancer = Distancer(gameState.data.layout, False)
+        # Se calcula el numero de fantasmas con el que se empieza el juego
         for i in gameState.getLivingGhosts():
             if i:
                 self.living = self.living + 1
@@ -1296,18 +1298,18 @@ class QLearningAgent(BustersAgent):
        
         aux = 0
         
-        if self.new_state[1] == "North":
+        if self.best_direction[1] == "North":
             aux = 0
-        elif self.new_state[1] == "South":
+        elif self.best_direction[1] == "South":
             aux = 1
-        elif self.new_state[1] == "East":
+        elif self.best_direction[1] == "East":
             aux = 2   
-        elif self.new_state[1] == "West":
+        elif self.best_direction[1] == "West":
             aux = 3  
-        elif self.new_state[1] == "Stop":
+        elif self.best_direction[1]== "Stop":
             aux = 4      
 
-        return (self.new_state[0]*4) + aux
+        return (self.best_direction[0]*4) + aux
 
     def getQValue(self, state, action):
 
@@ -1351,10 +1353,13 @@ class QLearningAgent(BustersAgent):
         if len(legalActions)==0:
           return None
 
-        #POR QUE LO INICIALIZAN ASI
+        print("Las acciones legales son: " + str(legalActions))  
+
+        # POR QUE LO INICIALIZAN ASI
         # best_actions = [legalActions[0]]
         best_actions = []
         best_value = self.getQValue(state, legalActions[0])
+        print("ComputeActionFromQValues empieza con: " + str(best_value))        
 
         for action in legalActions:
             value = self.getQValue(state, action)
@@ -1363,7 +1368,12 @@ class QLearningAgent(BustersAgent):
             if value > best_value:
                 best_actions = [action]
                 best_value = value
-        return random.choice(best_actions)
+            print("En el for estamos mirando value: " + str(value) + " y best value: " + str(best_value) + " y action es: " + str(action))        
+        print("ComputeActionFromQValues devuelve: " + str(best_actions))   
+        retorno = random.choice(best_actions) 
+        print("El retorno es: " + str(retorno))  
+        self.choosen_action = retorno 
+        return retorno
 
     def getAction(self, state):
         """
@@ -1373,48 +1383,59 @@ class QLearningAgent(BustersAgent):
           no legal actions, which is the case at the terminal state, you
           should choose None as the action.
         """
-        self.new_state = []
         
         # Pick Action
         legalActions = state.getLegalActions()
 
         if len(legalActions) == 0:
-             return self.new_state 
+             return self.state 
         else:
-            self.new_state = copy.deepcopy(self.calculateBestDirection(state))
+            #self.new_state = copy.deepcopy(self.calculateBestDirection(state))
+            self.best_direction = self.calculateBestDirection(state)
+            print("Actualizamos best_direction a: " + str(self.best_direction))
 
         reward = 0
 
         if(self.past_state != None):
             aux = 0
+
+            # Calcular el numero de fantasmas vivos
             for i in state.getLivingGhosts():
                 if i==True:
                     aux = aux + 1
-            if aux < self.living and aux==0:
+
+            # Diferentes recompensas en funcion del numero de fantasmas vivos        
+            if aux < self.living and aux==0: # Caso del ultimo fantasma
                 reward = 1.0
                 self.living = aux
                 print("Me he comido y acabo, tengo reward " + str(reward) + " y hay " + str(self.living) + " fantasmas vivos")
-            elif aux < self.living and aux!=0:
+            elif aux < self.living and aux!=0: # Caso de que ya hay un fantasma comido pero quedan aun vivos
                 reward = 0.99
                 self.living = aux
                 print("Me he comido uno pero no acabo, tengo reward " + str(reward) + " y hay " + str(self.living) + " fantasmas vivos")
-            else:
+            else: # Caso en que aun no se ha comido ningun fantasma
                 min = 1000000
+                # Calculamos la distancia minima a los fantasmas
                 for i in range(0, len(state.data.ghostDistances)):
                     if state.data.ghostDistances[i] != None and state.data.ghostDistances[i]< min:
                         min = state.data.ghostDistances[i]
                 distance = max((state.data.layout.width-2), (state.data.layout.height-4))
-                reward = 1.0/(min+1.0)
+                reward = 1.0/(min+1.0) # Se suma 1 al minimo porque si esta a 1 de distancia del fantasma ya tienes recimpensa 1
                 print("Con distancia " + str(min) + " he obtenido un reward de " + str(reward))
+
+            #print("Nuestro past_state ahora mismo es: " + str(self.past_state))
+
             self.update(self.past_state, state, reward)
             
-        
         self.past_state = copy.deepcopy(state)
 
         flip = util.flipCoin(self.epsilon)
 
         if flip:
-		    return random.choice(legalActions) #esto lo he identado porque no tiene sentido estar al mismo nivel que el return de abajo
+            self.choosen_action = random.choice(legalActions)
+            return self.choosen_action
+        
+        print("Hola")
         return self.getPolicy(state)
 
     def calculateBestDirection(self, state):
@@ -1557,9 +1578,9 @@ class QLearningAgent(BustersAgent):
 	  	        Q(state,action) <- (1-self.alpha) Q(state,action) + self.alpha * (r + self.discount * max a' Q(nextState, a'))
         '''
         position = self.computePosition(state) #obtenemos la posicion correspondiente con el estado actual
-        naction = self.actions[self.new_state[1]] #obtenemos el identificador de la accion a tomar
+        naction = self.actions[self.choosen_action] #obtenemos el identificador de la accion a tomar
 
-     	#print("Actualizando la posicion: " + str(position) + " y la accion " + str(naction) + " y la reward " + str(reward))
+     	print("Actualizando la posicion: " + str(position) + " y la accion " + str(naction) + " y la reward " + str(reward))
 
         #Esto habra que ver cunado se pasa que no esta claro jejeje
         if reward==1.0: #el estado sera final si el refuerzo es 1
