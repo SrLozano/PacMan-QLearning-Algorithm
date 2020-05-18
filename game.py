@@ -716,6 +716,9 @@ class Game:
             if _BOINC_ENABLED:
                 boinc.set_fraction_done(self.getProgress())
 
+        # Aqui tenemos qeu hacer update de La tabla Q para el ultimo fantasma comido
+        #Q(s, a) = (1- alpha) * Q(s, a) + alpha * reward
+
         # inform a learning agent of the game result
         for agentIndex, agent in enumerate(self.agents):
             if "final" in dir( agent ) :

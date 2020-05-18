@@ -1192,8 +1192,8 @@ class QLearningAgent(BustersAgent):
         self.actions = {"North":0, "East":1, "South":2, "West":3, "Exit":4, "Stop": 5}
         self.table_file = open("qtable.txt", "r+")
         self.q_table = self.readQtable()
-        self.epsilon = 0.2 #Probabilidad de que se mueva random
-        self.alpha = 0.5 #Tasa de aprendizaje representa como de agresivo es el aprendizaje 
+        self.epsilon = 0 #Probabilidad de que se mueva random
+        self.alpha = 0.1 #Tasa de aprendizaje representa como de agresivo es el aprendizaje 
         self.discount = 0.9 #Factor de descuento para dar mas importancia a las recompensas mas inmediatas
         self.past_state = None
 
@@ -1411,23 +1411,23 @@ class QLearningAgent(BustersAgent):
 
             # Diferentes recompensas en funcion del numero de fantasmas vivos        
             if aux < self.living and aux==0: # Caso del ultimo fantasma
-                reward = 1.0
+                reward = 200
                 self.living = aux
                 print("Me he comido y acabo, tengo reward " + str(reward) + " y hay " + str(self.living) + " fantasmas vivos")
             elif aux < self.living and aux!=0: # Caso de que ya hay un fantasma comido pero quedan aun vivos
-                reward = 0.99
+                reward = 200
                 self.living = aux
                 print("Me he comido uno pero no acabo, tengo reward " + str(reward) + " y hay " + str(self.living) + " fantasmas vivos")
             else: # Caso en que aun no se ha comido ningun fantasma
-                min = 1000000
-                # Calculamos la distancia minima a los fantasmas
-                for i in range(0, len(state.data.ghostDistances)):
-                    if state.data.ghostDistances[i] != None and state.data.ghostDistances[i]< min:
-                        min = state.data.ghostDistances[i]
-                distance = max((state.data.layout.width-2), (state.data.layout.height-4))
-                reward = 1.0/(min+1.0) # Se suma 1 al minimo porque si esta a 1 de distancia del fantasma ya tienes recimpensa 1
-                print("Con distancia " + str(min) + " he obtenido un reward de " + str(reward))
-
+                # min = 1000000
+                # # Calculamos la distancia minima a los fantasmas
+                # for i in range(0, len(state.data.ghostDistances)):
+                #     if state.data.ghostDistances[i] != None and state.data.ghostDistances[i]< min:
+                #         min = state.data.ghostDistances[i]
+                # distance = max((state.data.layout.width-2), (state.data.layout.height-4))
+                # reward = 1.0/(min+1.0) # Se suma 1 al minimo porque si esta a 1 de distancia del fantasma ya tienes recimpensa 1
+                # print("Con distancia " + str(min) + " he obtenido un reward de " + str(reward))
+                reward = 0
             #print("Nuestro past_state ahora mismo es: " + str(self.past_state))
             
             self.update(self.past_state, state, reward)
