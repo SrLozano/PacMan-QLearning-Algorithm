@@ -16,7 +16,7 @@ else:
     print("el maximo es: " + str(sys.argv[2]))
 
 for i in range(0, max):
-    for j in range(0, 6):
+    for j in range(0, 5):
         salida = salida + "0.0 "
     if i != max-1:
         salida = salida + "\n"

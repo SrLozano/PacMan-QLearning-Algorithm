@@ -1306,8 +1306,7 @@ class QLearningAgent(BustersAgent):
             aux = 2   
         elif self.best_direction[1] == "West":
             aux = 3  
-        elif self.best_direction[1]== "Stop":
-            aux = 4      
+         
 
         return (self.best_direction[0]*4) + aux
 
@@ -1353,6 +1352,9 @@ class QLearningAgent(BustersAgent):
         if len(legalActions)==0:
           return None
 
+        if "Stop" in legalActions:
+            legalActions.remove("Stop")
+
         print("Las acciones legales son: " + str(legalActions))  
 
         # POR QUE LO INICIALIZAN ASI
@@ -1371,6 +1373,7 @@ class QLearningAgent(BustersAgent):
             print("En el for estamos mirando value: " + str(value) + " y best value: " + str(best_value) + " y action es: " + str(action))        
         print("ComputeActionFromQValues devuelve: " + str(best_actions))   
         retorno = random.choice(best_actions) 
+        
         print("El retorno es: " + str(retorno))  
         self.choosen_action = retorno 
         return retorno
@@ -1390,6 +1393,8 @@ class QLearningAgent(BustersAgent):
         if len(legalActions) == 0:
              return self.state 
         else:
+            if "Stop" in legalActions:
+                legalActions.remove("Stop")
             #self.new_state = copy.deepcopy(self.calculateBestDirection(state))
             self.best_direction = self.calculateBestDirection(state)
             print("Actualizamos best_direction a: " + str(self.best_direction))
@@ -1424,7 +1429,7 @@ class QLearningAgent(BustersAgent):
                 print("Con distancia " + str(min) + " he obtenido un reward de " + str(reward))
 
             #print("Nuestro past_state ahora mismo es: " + str(self.past_state))
-
+            
             self.update(self.past_state, state, reward)
             
         self.past_state = copy.deepcopy(state)
@@ -1559,6 +1564,7 @@ class QLearningAgent(BustersAgent):
                         self.fixed_action = Directions.WEST
                         
                 self.random_movements = 5
+                
         
         return ret
 
