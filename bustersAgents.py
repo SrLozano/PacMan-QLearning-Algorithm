@@ -1192,9 +1192,9 @@ class QLearningAgent(BustersAgent):
         self.actions = {"North":0, "East":1, "South":2, "West":3, "Exit":4, "Stop": 5}
         self.table_file = open("qtable.txt", "r+")
         self.q_table = self.readQtable()
-        self.epsilon = 0  #Probabilidad de que se mueva random
-        self.alpha = 0.1 #Tasa de aprendizaje representa como de agresivo es el aprendizaje 
-        self.discount = 0.9 #Factor de descuento para dar mas importancia a las recompensas mas inmediatas
+        self.epsilon = 0.1  #Probabilidad de que se mueva random
+        self.alpha = 0.2 #Tasa de aprendizaje representa como de agresivo es el aprendizaje 
+        self.discount = 0.5 #Factor de descuento para dar mas importancia a las recompensas mas inmediatas
         self.past_state = None
  
  
