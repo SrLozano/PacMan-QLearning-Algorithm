@@ -1409,13 +1409,17 @@ class QLearningAgent(BustersAgent):
                 print("Me he comido, tengo reward " + str(reward) + " y hay " + str(self.living) + " fantasmas vivos")
             else: # Caso en que aun no se ha comido ningun fantasma
                 min = 1000000
+                closest_ghost = -1
                 # Calculamos la distancia minima a los fantasmas
                 for i in range(0, len(state.data.ghostDistances)):
                     if state.data.ghostDistances[i] != None and state.data.ghostDistances[i]< min:
                         min = state.data.ghostDistances[i]
-                distance = max((state.data.layout.width-2), (state.data.layout.height-4))
-                reward = 1.0/(min+1.0) # Se suma 1 al minimo porque si esta a 1 de distancia del fantasma ya tienes recimpensa 1
-                print("Con distancia " + str(min) + " he obtenido un reward de " + str(reward))
+                        closest_ghost = i
+                
+                # distance = max((state.data.layout.width-2), (state.data.layout.height-4))
+                mazeDistance = self.distancer.getDistance(state.getPacmanPosition(), state.getGhostPositions()[closest_ghost])
+                reward = 1.0/mazeDistance # Se suma 1 al minimo porque si esta a 1 de distancia del fantasma ya tienes recimpensa 1
+                print("Con distancia " + str(mazeDistance) + " he obtenido un reward de " + str(reward))
                 # reward = 0
             #print("Nuestro past_state ahora mismo es: " + str(self.past_state))
             
