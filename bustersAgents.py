@@ -1192,7 +1192,7 @@ class QLearningAgent(BustersAgent):
         self.actions = {"North":0, "East":1, "South":2, "West":3, "Exit":4, "Stop": 5}
         self.table_file = open("qtable.txt", "r+")
         self.q_table = self.readQtable()
-        self.epsilon = 0.3 #Probabilidad de que se mueva random
+        self.epsilon = 0  #Probabilidad de que se mueva random
         self.alpha = 0.1 #Tasa de aprendizaje representa como de agresivo es el aprendizaje 
         self.discount = 0.9 #Factor de descuento para dar mas importancia a las recompensas mas inmediatas
         self.past_state = None
@@ -1542,6 +1542,14 @@ class QLearningAgent(BustersAgent):
                 add_legal = True
 
         while not add_legal:
+            # if Directions.WEST in legal:
+            #     ret.append(Directions.WEST)
+            # elif Directions.EAST in legal:
+            #     ret.append(Directions.EAST)
+            # elif Directions.NORTH in legal:
+            #     ret.append(Directions.NORTH)
+            # else:
+            #     ret.append(Directions.SOUTH)
             move_random = random.randint(0, 3)
             if ( move_random == 0 ) and Directions.WEST in legal:
                 ret.append(Directions.WEST)
@@ -1555,11 +1563,9 @@ class QLearningAgent(BustersAgent):
             if ( move_random == 3 ) and Directions.SOUTH in legal: 
                 ret.append(Directions.SOUTH)
                 add_legal = True
-
-
-
-
         
+        # print("esto es pa probar " + str(state.getWalls()))
+        # print(" La cosa rara es: " + str(state.getWalls().asList(False)))
         # if difX >= 0 and difY >= 0:
         #     if ((difX < difY and difX!=0) or difY==0) and Directions.WEST in legal:
         #         ret.append( Directions.WEST)

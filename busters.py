@@ -194,7 +194,7 @@ class GameState:
         Grids can be accessed via list notation, so to check
         if there is food at (x,y), just call
 
-        walls = state.getWalls()
+        walls = Walls()
         if walls[x][y] == True: ...
         """
         return self.data.layout.walls
