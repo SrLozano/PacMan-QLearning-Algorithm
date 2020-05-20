@@ -1297,8 +1297,25 @@ class QLearningAgent(BustersAgent):
         # return ((self.new_state[0][0]-1)*(state.data.layout.height-4)*4) + ((self.new_state[0][1]-3) * 4) + aux - 1
         # # (X * ALTO * NUMERO_ACCIONES) + (Y * NUMERO_ACCIONES ) + (ID_ACCION_ELEGIDA)      RESTAMOS 1 A LA X Y A LA Y PORQUE ELLOS EMPIEZAN EN 1 NO EN 0   
        
+        aux1 = 0
+        if self.best_direction[0] == "North":
+            aux1 = 0
+        elif self.best_direction[0] == "Northeast":
+            aux1 = 1
+        elif self.best_direction[0] == "East":
+            aux1 = 2  
+        elif self.best_direction[0] == "Southeast":
+            aux1 = 3
+        elif self.best_direction[0] == "South":
+            aux1 = 4
+        elif self.best_direction[0] == "Southwest":
+            aux1 = 5
+        elif self.best_direction[0] == "West":
+            aux1 = 6          
+        elif self.best_direction[0] == "Northwest":
+            aux1 = 7 
+
         aux = 0
-        
         if self.best_direction[1] == "North":
             aux = 0
         elif self.best_direction[1] == "South":
@@ -1306,10 +1323,9 @@ class QLearningAgent(BustersAgent):
         elif self.best_direction[1] == "East":
             aux = 2   
         elif self.best_direction[1] == "West":
-            aux = 3  
-         
-
-        return (self.best_direction[0]*4) + aux
+            aux = 3 
+        
+        return (aux1*4) + aux
 
     def getQValue(self, state, action):
 
@@ -1411,24 +1427,20 @@ class QLearningAgent(BustersAgent):
                     aux = aux + 1
 
             # Diferentes recompensas en funcion del numero de fantasmas vivos        
-            if aux < self.living and aux==0: # Caso del ultimo fantasma
+            if aux < self.living: # Caso del ultimo fantasma
                 reward = 200
                 self.living = aux
-                print("Me he comido y acabo, tengo reward " + str(reward) + " y hay " + str(self.living) + " fantasmas vivos")
-            elif aux < self.living and aux!=0: # Caso de que ya hay un fantasma comido pero quedan aun vivos
-                reward = 200
-                self.living = aux
-                print("Me he comido uno pero no acabo, tengo reward " + str(reward) + " y hay " + str(self.living) + " fantasmas vivos")
+                print("Me he comido, tengo reward " + str(reward) + " y hay " + str(self.living) + " fantasmas vivos")
             else: # Caso en que aun no se ha comido ningun fantasma
-                # min = 1000000
-                # # Calculamos la distancia minima a los fantasmas
-                # for i in range(0, len(state.data.ghostDistances)):
-                #     if state.data.ghostDistances[i] != None and state.data.ghostDistances[i]< min:
-                #         min = state.data.ghostDistances[i]
-                # distance = max((state.data.layout.width-2), (state.data.layout.height-4))
-                # reward = 1.0/(min+1.0) # Se suma 1 al minimo porque si esta a 1 de distancia del fantasma ya tienes recimpensa 1
-                # print("Con distancia " + str(min) + " he obtenido un reward de " + str(reward))
-                reward = 0
+                min = 1000000
+                # Calculamos la distancia minima a los fantasmas
+                for i in range(0, len(state.data.ghostDistances)):
+                    if state.data.ghostDistances[i] != None and state.data.ghostDistances[i]< min:
+                        min = state.data.ghostDistances[i]
+                distance = max((state.data.layout.width-2), (state.data.layout.height-4))
+                reward = 1.0/(min+1.0) # Se suma 1 al minimo porque si esta a 1 de distancia del fantasma ya tienes recimpensa 1
+                print("Con distancia " + str(min) + " he obtenido un reward de " + str(reward))
+                # reward = 0
             #print("Nuestro past_state ahora mismo es: " + str(self.past_state))
             
             self.update(self.past_state, state, reward)
@@ -1462,11 +1474,40 @@ class QLearningAgent(BustersAgent):
         difX = PacMan_pos[0] - ClosestGhost[0]
         difY = PacMan_pos[1] - ClosestGhost[1]
 
-        if(abs(difX)<abs(difY)):
-            ret.append(abs(difX))
-        else:
-            ret.append(abs(difY))
-        
+        # if(abs(difX)<abs(difY)):
+        #     ret.append(abs(difX))
+        # else:
+        #     ret.append(abs(difY))
+
+        if difY == 0: #este u oeste
+            if difX > 0: #oeste
+                ret.append("West")
+            else: #este
+                ret.append("East")
+
+        elif difX == 0: #norte o sur
+            if difY > 0: #sur
+                ret.append("South")
+            else: #norte
+                ret.append("North")
+
+        elif difX > 0: #oeste
+            if difY > 0: #sur
+                #suroeste
+                ret.append("Southwest")
+            else: 
+                #noroeste
+                ret.append("Northwest")
+
+        elif difX < 0: #este
+            if difY > 0: 
+                #sureste
+                ret.append("Southeast")
+            else: 
+               #noreste 
+               ret.append("Northeast")
+
+        #NORTE, SUR , ESTE , OESTE, NORESTE, NOROESTE, SURESTE, SUROESTE
 
         if difX >= 0 and difY >= 0:
             if ((difX < difY and difX!=0) or difY==0) and Directions.WEST in legal:

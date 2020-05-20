@@ -23,6 +23,9 @@ from util import *
 import time, os
 import traceback
 import sys
+import copy
+#from bustersAgents import QLearningAgent
+
 
 #######################
 # Parts worth reading #
@@ -611,6 +614,8 @@ class Game:
         numAgents = len( self.agents )
         step = 0
         while not self.gameOver:
+            
+            self.past_state_while = copy.deepcopy(self.state)    
             # Fetch the next agent
             agent = self.agents[agentIndex]
             move_time = 0
@@ -718,8 +723,12 @@ class Game:
 
         # Aqui tenemos qeu hacer update de La tabla Q para el ultimo fantasma comido
         #Q(s, a) = (1- alpha) * Q(s, a) + alpha * reward
+        # print("Antes de update dek while")
+        # QLearningAgent.update(self.past_state_while, self.state, 200)
+    
+        # print(str(self.state))
 
-        # inform a learning agent of the game result
+        # infoRrm a learning agent of the game result
         for agentIndex, agent in enumerate(self.agents):
             if "final" in dir( agent ) :
                 try:
