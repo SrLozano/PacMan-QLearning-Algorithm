@@ -1192,7 +1192,7 @@ class QLearningAgent(BustersAgent):
         self.actions = {"North":0, "East":1, "South":2, "West":3, "Exit":4, "Stop": 5}
         self.table_file = open("qtable.txt", "r+")
         self.q_table = self.readQtable()
-        self.epsilon = 0 #Probabilidad de que se mueva random
+        self.epsilon = 0.3 #Probabilidad de que se mueva random
         self.alpha = 0.1 #Tasa de aprendizaje representa como de agresivo es el aprendizaje 
         self.discount = 0.9 #Factor de descuento para dar mas importancia a las recompensas mas inmediatas
         self.past_state = None
@@ -1273,30 +1273,6 @@ class QLearningAgent(BustersAgent):
 	Compute the row of the qtable for a given state.
 	For instance, the state (3,1) is the row 7
 	"""
-        # # new_state = ((x, y), direccion)
-        # aux = 0
-        
-        # if self.new_state[1] == "North":
-        #     aux = 0
-        # elif self.new_state[1] == "South":
-        #     aux = 1
-        # elif self.new_state[1] == "East":
-        #     aux = 2   
-        # elif self.new_state[1] == "West":
-        #     aux = 3  
-        # elif self.new_state[1] == "Stop":
-        #     aux = 4      
-        # print("posicion x: " + str(self.new_state[0][0]))
-        # print("posicion y: " + str(self.new_state[0][1]))
-        # print("aux: " + str(aux))
-        # print("el resultado es: " + str(((self.new_state[0][0]-1)*(state.data.layout.height-3)*4) + ((self.new_state[0][1]-1) * 4) + aux))
-        # print("el ancho es: " + str(state.data.layout.width-2))
-        # print("el alto es: " + str(state.data.layout.height-4))
-
-        # # He cambiado las restas a las ys TIENE SENTIDO CREO porque la posicion inicial es x:12 e y:3..... SOSPECHOSO. LA LINEA DE ARRIBA NO SE CUENTA
-        # return ((self.new_state[0][0]-1)*(state.data.layout.height-4)*4) + ((self.new_state[0][1]-3) * 4) + aux - 1
-        # # (X * ALTO * NUMERO_ACCIONES) + (Y * NUMERO_ACCIONES ) + (ID_ACCION_ELEGIDA)      RESTAMOS 1 A LA X Y A LA Y PORQUE ELLOS EMPIEZAN EN 1 NO EN 0   
-       
         aux1 = 0
         if self.best_direction[0] == "North":
             aux1 = 0
@@ -1428,7 +1404,7 @@ class QLearningAgent(BustersAgent):
 
             # Diferentes recompensas en funcion del numero de fantasmas vivos        
             if aux < self.living: # Caso del ultimo fantasma
-                reward = 200
+                reward = 50
                 self.living = aux
                 print("Me he comido, tengo reward " + str(reward) + " y hay " + str(self.living) + " fantasmas vivos")
             else: # Caso en que aun no se ha comido ningun fantasma
@@ -1508,104 +1484,175 @@ class QLearningAgent(BustersAgent):
                ret.append("Northeast")
 
         #NORTE, SUR , ESTE , OESTE, NORESTE, NOROESTE, SURESTE, SUROESTE
+        add_legal = False
+        if ret[0] == "North":
+            if Directions.NORTH in legal:
+                ret.append(Directions.NORTH)
+                add_legal = True
 
-        if difX >= 0 and difY >= 0:
-            if ((difX < difY and difX!=0) or difY==0) and Directions.WEST in legal:
-                ret.append( Directions.WEST)
-            elif Directions.SOUTH in legal:
-                ret.append(  Directions.SOUTH)
-            else:
-                move_random = random.randint(0, 1)
-                if ( move_random == 0 ):
-                    if  Directions.EAST in legal:    
-                        ret.append( Directions.EAST)
-                        self.fixed_action = Directions.EAST
-                    else:
-                        ret.append( Directions.NORTH)
-                        self.fixed_action = Directions.NORTH        
+        elif ret[0] == "Northeast":
+            if abs(difY) < abs(difX) and Directions.NORTH in legal:
+                ret.append(Directions.NORTH)
+                add_legal = True
+            elif Directions.EAST in legal: 
+                ret.append(Directions.EAST)
+                add_legal = True
+                
+        elif ret[0] == "East":
+            if Directions.EAST in legal:
+                ret.append(Directions.EAST)
+                add_legal = True
+        
+        elif ret[0] == "Southeast":
+            if abs(difY) < abs(difX) and Directions.SOUTH in legal:
+                ret.append(Directions.SOUTH)
+                add_legal = True
+            elif Directions.EAST in legal: 
+                ret.append(Directions.EAST)
+                add_legal = True
 
-                if   ( move_random == 1 ):      
-                    if  Directions.NORTH in legal:   
-                        ret.append(  Directions.NORTH)
-                        self.fixed_action = Directions.NORTH
-                    else:
-                        ret.append( Directions.EAST)
-                        self.fixed_action = Directions.EAST     
-                self.random_movements = 5
-
-        elif difX >= 0 and difY <= 0:
-            if ((difX < difY and difX!=0) or difY==0) and Directions.WEST in legal:
-                ret.append( Directions.WEST)
-            elif Directions.NORTH in legal:
-                ret.append( Directions.NORTH)
-            else:
-                move_random = random.randint(0, 1)
-                if ( move_random == 0 ):
-                    if  Directions.EAST in legal: 
-                        ret.append( Directions.EAST)
-                        self.fixed_action = Directions.EAST
-                    else: 
-                        ret.append( Directions.SOUTH)
-                        self.fixed_action = Directions.SOUTH
-
-                if   ( move_random == 1 ):  
-                    if   Directions.SOUTH in legal:  
-                        ret.append( Directions.SOUTH)
-                        self.fixed_action = Directions.SOUTH
-                    else:
-                        ret.append( Directions.EAST)
-                        self.fixed_action = Directions.EAST
-
-                self.random_movements = 5
-
-        elif difX <= 0 and difY >= 0:
-            if ((difX < difY and difX!=0) or difY==0) and Directions.EAST in legal:
-                ret.append( Directions.EAST)
-            elif Directions.SOUTH in legal:
+        elif ret[0] == "South":
+            if Directions.SOUTH in legal:
                 ret.append( Directions.SOUTH)
-            else:
-                move_random = random.randint(0, 1)
-                if ( move_random == 0 ):
-                    if Directions.WEST in legal: 
-                        ret.append(  Directions.WEST)
-                        self.fixed_action = Directions.WEST
-                    else: 
-                        ret.append( Directions.NORTH)
-                        self.fixed_action = Directions.NORTH
-                        
-                if   ( move_random == 1 ):   
-                    if  Directions.NORTH in legal:   
-                        ret.append( Directions.NORTH)
-                        self.fixed_action = Directions.NORTH
-                    else:
-                        ret.append( Directions.WEST)
-                        self.fixed_action = Directions.WEST    
-                self.random_movements = 5
+                add_legal = True
+            
+        elif ret[0] == "Southwest":
+            if abs(difY) < abs(difX) and Directions.SOUTH in legal:
+                ret.append(Directions.SOUTH)
+                add_legal = True
+            elif Directions.WEST in legal: 
+                ret.append(Directions.WEST)
+                add_legal = True
+            
+        elif ret[0] == "West":
+            if Directions.WEST in legal:
+                ret.append(Directions.WEST)
+                add_legal = True
 
-        elif difX <= 0 and difY <= 0:
-            if ((difX < difY and difX!=0) or difY==0) and Directions.EAST in legal:
-                ret.append( Directions.EAST)
-            elif Directions.NORTH in legal:
-                ret.append(  Directions.NORTH)
-            else:
-                move_random = random.randint(0, 1)
-                if ( move_random == 0 ):
-                    if Directions.WEST in legal: 
-                        ret.append( Directions.WEST)
-                        self.fixed_action = Directions.WEST
-                    else:
-                        ret.append( Directions.SOUTH)
-                        self.fixed_action = Directions.SOUTH
+        elif ret[0] == "Northwest":    
+            if abs(difY) < abs(difX) and Directions.NORTH in legal:
+                ret.append(Directions.NORTH)
+                add_legal = True
+            elif Directions.WEST in legal: 
+                ret.append(Directions.WEST)  
+                add_legal = True
 
-                if   ( move_random == 1 ) :
-                    if Directions.SOUTH in legal:   
-                        ret.append( Directions.SOUTH)
-                        self.fixed_action = Directions.SOUTH
-                    else:
-                        ret.append( Directions.WEST)
-                        self.fixed_action = Directions.WEST
+        while not add_legal:
+            move_random = random.randint(0, 3)
+            if ( move_random == 0 ) and Directions.WEST in legal:
+                ret.append(Directions.WEST)
+                add_legal = True
+            if ( move_random == 1 ) and Directions.EAST in legal: 
+                ret.append(Directions.EAST)
+                add_legal = True
+            if ( move_random == 2 ) and Directions.NORTH in legal:   
+                ret.append(Directions.NORTH)
+                add_legal = True
+            if ( move_random == 3 ) and Directions.SOUTH in legal: 
+                ret.append(Directions.SOUTH)
+                add_legal = True
+
+
+
+
+        
+        # if difX >= 0 and difY >= 0:
+        #     if ((difX < difY and difX!=0) or difY==0) and Directions.WEST in legal:
+        #         ret.append( Directions.WEST)
+        #     elif Directions.SOUTH in legal:
+        #         ret.append(  Directions.SOUTH)
+        #     else:
+        #         move_random = random.randint(0, 1)
+        #         if ( move_random == 0 ):
+        #             if  Directions.EAST in legal:    
+        #                 ret.append( Directions.EAST)
+        #                 self.fixed_action = Directions.EAST
+        #             else:
+        #                 ret.append( Directions.NORTH)
+        #                 self.fixed_action = Directions.NORTH        
+
+        #         if   ( move_random == 1 ):      
+        #             if  Directions.NORTH in legal:   
+        #                 ret.append(  Directions.NORTH)
+        #                 self.fixed_action = Directions.NORTH
+        #             else:
+        #                 ret.append( Directions.EAST)
+        #                 self.fixed_action = Directions.EAST     
+        #         self.random_movements = 5
+
+        # elif difX >= 0 and difY <= 0:
+        #     if ((difX < difY and difX!=0) or difY==0) and Directions.WEST in legal:
+        #         ret.append( Directions.WEST)
+        #     elif Directions.NORTH in legal:
+        #         ret.append( Directions.NORTH)
+        #     else:
+        #         move_random = random.randint(0, 1)
+        #         if ( move_random == 0 ):
+        #             if  Directions.EAST in legal: 
+        #                 ret.append( Directions.EAST)
+        #                 self.fixed_action = Directions.EAST
+        #             else: 
+        #                 ret.append( Directions.SOUTH)
+        #                 self.fixed_action = Directions.SOUTH
+
+        #         if   ( move_random == 1 ):  
+        #             if   Directions.SOUTH in legal:  
+        #                 ret.append( Directions.SOUTH)
+        #                 self.fixed_action = Directions.SOUTH
+        #             else:
+        #                 ret.append( Directions.EAST)
+        #                 self.fixed_action = Directions.EAST
+
+        #         self.random_movements = 5
+
+        # elif difX <= 0 and difY >= 0:
+        #     if ((difX < difY and difX!=0) or difY==0) and Directions.EAST in legal:
+        #         ret.append( Directions.EAST)
+        #     elif Directions.SOUTH in legal:
+        #         ret.append( Directions.SOUTH)
+        #     else:
+        #         move_random = random.randint(0, 1)
+        #         if ( move_random == 0 ):
+        #             if Directions.WEST in legal: 
+        #                 ret.append(  Directions.WEST)
+        #                 self.fixed_action = Directions.WEST
+        #             else: 
+        #                 ret.append( Directions.NORTH)
+        #                 self.fixed_action = Directions.NORTH
                         
-                self.random_movements = 5
+        #         if   ( move_random == 1 ):   
+        #             if  Directions.NORTH in legal:   
+        #                 ret.append( Directions.NORTH)
+        #                 self.fixed_action = Directions.NORTH
+        #             else:
+        #                 ret.append( Directions.WEST)
+        #                 self.fixed_action = Directions.WEST    
+        #         self.random_movements = 5
+
+        # elif difX <= 0 and difY <= 0:
+        #     if ((difX < difY and difX!=0) or difY==0) and Directions.EAST in legal:
+        #         ret.append( Directions.EAST)
+        #     elif Directions.NORTH in legal:
+        #         ret.append(  Directions.NORTH)
+        #     else:
+        #         move_random = random.randint(0, 1)
+        #         if ( move_random == 0 ):
+        #             if Directions.WEST in legal: 
+        #                 ret.append( Directions.WEST)
+        #                 self.fixed_action = Directions.WEST
+        #             else:
+        #                 ret.append( Directions.SOUTH)
+        #                 self.fixed_action = Directions.SOUTH
+
+        #         if   ( move_random == 1 ) :
+        #             if Directions.SOUTH in legal:   
+        #                 ret.append( Directions.SOUTH)
+        #                 self.fixed_action = Directions.SOUTH
+        #             else:
+        #                 ret.append( Directions.WEST)
+        #                 self.fixed_action = Directions.WEST
+                        
+        #         self.random_movements = 5
                 
         
         return ret
