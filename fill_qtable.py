@@ -15,10 +15,10 @@ max = -1
 #     max = 4*int(sys.argv[2])
 #     print("el maximo es: " + str(sys.argv[2]))
 
-max = 4*8
+max = 16
 
 for i in range(0, max):
-    for j in range(0, 5):
+    for j in range(0, 4):
         salida = salida + "0.0 "
     if i != max-1:
         salida = salida + "\n"

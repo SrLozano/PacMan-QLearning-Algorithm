@@ -614,7 +614,7 @@ class Game:
         numAgents = len( self.agents )
         step = 0
         while not self.gameOver:
-            
+         
             self.past_state_while = copy.deepcopy(self.state)    
             # Fetch the next agent
             agent = self.agents[agentIndex]
@@ -726,7 +726,7 @@ class Game:
         # print("Antes de update dek while")
         # QLearningAgent.update(self.past_state_while, self.state, 200)
     
-        # print(str(self.state))
+        print("-----------------------------------Acaba-----------------------------------")
 
         # infoRrm a learning agent of the game result
         for agentIndex, agent in enumerate(self.agents):
