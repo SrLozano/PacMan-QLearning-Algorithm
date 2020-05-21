@@ -784,6 +784,7 @@ class BasicAgentAA(BustersAgent):
     fixed_action = ""
 
 
+
     def registerInitialState(self, gameState):
         BustersAgent.registerInitialState(self, gameState)
         self.distancer = Distancer(gameState.data.layout, False)
@@ -1183,6 +1184,12 @@ class QLearningAgent(BustersAgent):
     choosen_action = ""
     best_direction = [0,0,0,0] 
     past_best_direction = [0,0,0,0]
+    reward = 0
+    nfood = 0
+    dfood = 1000
+    lastDistance = 1000
+    closestGhost = None
+    closestFood = None
 
     def printLineData(self, gameState):
         return
@@ -1193,7 +1200,7 @@ class QLearningAgent(BustersAgent):
         self.actions = {"North":0, "East":1, "South":2, "West":3}
         self.table_file = open("qtable.txt", "r+")
         self.q_table = self.readQtable()
-        self.epsilon = 0.1  #Probabilidad de que se mueva random
+        self.epsilon = 0.5  #Probabilidad de que se mueva random
         self.alpha = 0.2 #Tasa de aprendizaje representa como de agresivo es el aprendizaje 
         self.discount = 0.5 #Factor de descuento para dar mas importancia a las recompensas mas inmediatas
         self.past_state = None
@@ -1204,6 +1211,9 @@ class QLearningAgent(BustersAgent):
         self.distancer = Distancer(gameState.data.layout, False)
         # Se calcula el numero de fantasmas con el que se empieza el juego
         self.living = sum(gameState.livingGhosts)
+        self.nfood = gameState.getNumFood()
+        self.dfood = gameState.getDistanceNearestFood()
+        
 
     ''' Example of counting something'''
     def countFood(self, gameState):
@@ -1239,7 +1249,6 @@ class QLearningAgent(BustersAgent):
 
     def readQtable(self):
 	"Read qtable from disc"
-        # print("Estamos en el readQtable")
         table = self.table_file.readlines()
         q_table = []
 
@@ -1252,7 +1261,6 @@ class QLearningAgent(BustersAgent):
 
     def writeQtable(self):
 	"Write qtable to disc"
-        # print("Estamos en el writeQtable")
         self.table_file.seek(0)
         self.table_file.truncate()
 
@@ -1272,41 +1280,12 @@ class QLearningAgent(BustersAgent):
 	Compute the row of the qtable for a given state.
 	For instance, the state (3,1) is the row 7
 	"""
-        row = 0
-        for i, direction in enumerate(self.best_direction):
-            row += direction * pow(2,i)
+        row = self.best_direction[3]*pow(2,0) + self.best_direction[2]*pow(2,1) + self.best_direction[1]*pow(2,2) + self.best_direction[0]*pow(2,3)
+        # for i, direction in enumerate(self.best_direction):
+        #     row += direction * pow(2,i)
+        # print "El estado es: " + str(self.best_direction)
         return row
-        # print self.best_direction
-       
-        # aux = self.best_direction[0][1]*6
-
-        # if self.best_direction[1][1] > self.best_direction[0][1]: #marron
-        #     aux += (self.best_direction[1][1]-1)*2
-        #     if self.best_direction[2][1] < self.best_direction[1][1]:
-        #         if self.best_direction[2][1]==2 and self.best_direction[1][1]==3:  #verde
-        #             aux += self.best_direction[2][1]-1
-        #         else:  #rojo
-        #             aux += self.best_direction[2][1]
-        #     else: #blanco
-        #         if self.best_direction[2][1]==3 and self.best_direction[1][1]==1:
-        #             aux += self.best_direction[2][1]-1
-        #         else:
-        #             aux += self.best_direction[2][1]-2
-
-        # else: #morado
-        #     aux += self.best_direction[1][1]*2
-        #     if self.best_direction[2][1] < self.best_direction[1][1]:
-        #         aux += self.best_direction[2][1]
-
-        #     else:
-        #         if (self.best_direction[2][1]==1 and self.best_direction[1][1]==0) or  (self.best_direction[2][1]==2 and self.best_direction[1][1]==0) or  (self.best_direction[2][1]==2 and self.best_direction[1][1]==1):
-        #             #amarillo
-        #             aux += self.best_direction[2][1] - 1
-        #         else:
-        #             aux += self.best_direction[2][1] - 2
-        # print("La fila es: " + str(aux))
-        # return 0
-
+        
     def getQValue(self, state, action):
 
         """
@@ -1315,16 +1294,9 @@ class QLearningAgent(BustersAgent):
           or the Q node value otherwise
         """
         position = self.computePosition(state)
-        # print("Con el 0")
-        #print(str(state.getLegalActions(0)))
-        # print("Sin el 0")
-        #print(str(state.getLegalActions()))
         action_column = self.actions[action]
 
-        # print("La posicion es:" +  str(position))
-        # print("La action_column es:" +  str(action_column))
-
-        return self.q_table[position][action_column]
+        return self.q_table[position][action_column] 
 
 
     def computeValueFromQValues(self, state):
@@ -1337,6 +1309,7 @@ class QLearningAgent(BustersAgent):
      	legalActions = state.getLegalActions()
         if len(legalActions)==0:
           return 0
+        
         return max(self.q_table[self.computePosition(state)])
 
     def computeActionFromQValues(self, state):
@@ -1345,18 +1318,14 @@ class QLearningAgent(BustersAgent):
           are no legal actions, which is the case at the terminal state,
           you should return None.
         """
-        legalActions = state.getLegalActions()
-        if len(legalActions)==0:
-          return None
+        legalActions = state.getLegalActions(0)
+        if len(legalActions) == 0:
+            return None
+        else:
+            legalActions.remove(Directions.STOP)
 
-        if "Stop" in legalActions:
-            legalActions.remove("Stop")
-
-        # print("Las acciones legales son: " + str(legalActions))
-
-        # POR QUE LO INICIALIZAN ASI
-        # best_actions = [legalActions[0]]
-        best_actions = []
+    
+        best_actions = [legalActions[0]]
         best_value = self.getQValue(state, legalActions[0])
 
         for action in legalActions:
@@ -1384,96 +1353,56 @@ class QLearningAgent(BustersAgent):
         """
 
         # Pick Action
-        legalActions = state.getLegalActions()
+        legalActions = state.getLegalActions(0)
+        legalActions.remove(Directions.STOP)
 
         if len(legalActions) == 0:
              return self.state
         else:
             self.past_best_direction = copy.deepcopy(self.best_direction)
-            
-            if "Stop" in legalActions:
-                legalActions.remove("Stop")
-            #self.new_state = copy.deepcopy(self.calculateBestDirection(state))
-            self.best_direction = self.calculateBestDirection(state)
-            # print("Actualizamos best_direction a: " + str(self.best_direction))
-            print "la anterior es : " +  str(self.past_best_direction)
-            print "la nueva es : " +  str(self.best_direction)
-        reward = 0
-
+            self.best_direction = self.getOurState(state)
+        print "quedan: " + str(state.getNumFood())
         if(self.past_state != None):
-            aux = sum(state.livingGhosts)
-
-
-            # Diferentes recompensas en funcion del numero de fantasmas vivos
-            if aux < self.living: # Se come un fantasma
-                reward = 100
-                
-            else: # Caso en que aun no se ha comido ningun fantasma
-                 
-                # reward = -1
-
-                i_min = -1
-                min_dis = 1000000
-                PacMan_pos = state.getPacmanPosition()
-                for ghost, living in enumerate(state.getLivingGhosts()):
-                    if living: 
-                        distance = self.distancer.getDistance(PacMan_pos, state.getGhostPositions()[ghost-1]) 
-                        if distance < min_dis:
-                            i_min = ghost
-                            min_dis = distance
+            if sum(state.livingGhosts) < self.living:
+                self.living = sum(state.livingGhosts)
+                self.reward = 100
+            elif state.getNumFood() < self.nfood:
+                print "ha comido!!!!!!!!!!!!!!!!!!!!!!!"
+                self.nfood = state.getNumFood()
+                self.reward = 50
+            else:
+                # i_min = -1
+                # min_dis = 1000000
+                # PacMan_pos = state.getPacmanPosition()
+                # for ghost, living in enumerate(state.getLivingGhosts()):
+                #     if living: 
+                #         distance = self.distancer.getDistance(PacMan_pos, state.getGhostPositions()[ghost-1]) 
+                #         if distance < min_dis:
+                #             i_min = ghost
+                #             min_dis = distance
         
-                closest_ghost = state.getGhostPositions()[i_min-1]
-                mazeDistance = self.distancer.getDistance(state.getPacmanPosition(), closest_ghost)
-
-                anterior = 0
-                if self.choosen_action=="North":
-                   anterior = self.distancer.getDistance((state.getPacmanPosition()[0], state.getPacmanPosition()[1]-1) , closest_ghost)
-                elif self.choosen_action=="East":
-                   anterior = self.distancer.getDistance((state.getPacmanPosition()[0]-1, state.getPacmanPosition()[1]) , closest_ghost)
-                elif self.choosen_action=="South":
-                   anterior = self.distancer.getDistance((state.getPacmanPosition()[0], state.getPacmanPosition()[1]+1) , closest_ghost)
-                elif self.choosen_action=="West":
-                   anterior = self.distancer.getDistance((state.getPacmanPosition()[0]+1, state.getPacmanPosition()[1]) , closest_ghost)
-
-                if mazeDistance < anterior:
-                   reward = 1
+                # closest_ghost = state.getGhostPositions()[i_min-1]
+                ghostDistance = self.distancer.getDistance(state.getPacmanPosition(), self.closestGhost)
+                closest = 1000
+                if self.closestFood == None:
+                    closest = ghostDistance
                 else:
-                   reward = -1
+                    foodDistance = self.distancer.getDistance(state.getPacmanPosition(), self.closestFood)
+                    if ghostDistance<foodDistance:
+                        closest = ghostDistance
+                    else:
+                        closest = foodDistance
 
-                #i_min = -1
-                #min = 1000000
-                #PacMan_pos = state.getPacmanPosition()
-                #for i in range(0, len(state.getLivingGhosts())-1):
-                #    if self.distancer.getDistance(PacMan_pos, state.getGhostPositions()[i]) < min:
-                #        i_min=i
-                
-                #closest_ghost = state.getGhostPositions()[i_min]
+                if closest < self.lastDistance:
+                    reward = (1.0/closest)
+                else:
+                    reward = (-1)*(1.0/closest)
+                self.lastDistance = closest
 
-                #mazeDistance = self.distancer.getDistance(state.getPacmanPosition(), closest_ghost)
-                #anterior = 0
-                #if self.choosen_action=="North":
-                #    anterior = self.distancer.getDistance((state.getPacmanPosition()[0], state.getPacmanPosition()[1]-1) , closest_ghost)
-                #elif self.choosen_action=="East":
-                #    anterior = self.distancer.getDistance((state.getPacmanPosition()[0]-1, state.getPacmanPosition()[1]) , closest_ghost)
-                #elif self.choosen_action=="South":
-                #    anterior = self.distancer.getDistance((state.getPacmanPosition()[0], state.getPacmanPosition()[1]+1) , closest_ghost)
-                #elif self.choosen_action=="West":
-                #    anterior = self.distancer.getDistance((state.getPacmanPosition()[0]+1, state.getPacmanPosition()[1]) , closest_ghost)
-
-                #if mazeDistance < anterior:
-                #    reward = (1.0/mazeDistance)
-                #else:
-                #    reward = 0
-                # reward = 1.0/mazeDistance # Se suma 1 al minimo porque si esta a 1 de distancia del fantasma ya tienes recimpensa 1
-                # print("Con distancia " + str(mazeDistance) + " he obtenido un reward de " + str(reward))
-                # print("aquiiii" + str(self.distancer.getDistance(state.getPacmanPosition(), state.getGhostPositions()[closest_ghost])))
-                # reward = 0
-            #print("Nuestro past_state ahora mismo es: " + str(self.past_state))
-
-            self.living = aux
-            self.update(self.past_state, state, reward)
+            self.update(self.past_state, state, self.reward)
 
         self.past_state = copy.deepcopy(state)
+
 
         flip = util.flipCoin(self.epsilon)
         action = None
@@ -1481,15 +1410,16 @@ class QLearningAgent(BustersAgent):
             self.choosen_action = random.choice(legalActions)
             action = self.choosen_action
         else:
-            # print("Hola")
             action = self.getPolicy(state)
 
+        #Descomentar estas dos lineas si se quiere entrenat al agente
         if sum(state.livingGhosts) == 1:
             sys.exit(0)
 
         return action
 
-    def calculateBestDirection(self, state):
+    def getOurState(self, state):
+
         
         legal = state.getLegalActions()
         i_min = -1
@@ -1501,36 +1431,68 @@ class QLearningAgent(BustersAgent):
                 if distance < min_dis:
                     i_min = ghost
                     min_dis = distance
-   
-        ClosestGhost = state.getGhostPositions()[i_min-1]
-        print ClosestGhost
 
+        self.closestGhost = state.getGhostPositions()[i_min-1]
+        actualGhost = self.distancer.getDistance(PacMan_pos, self.closestGhost)
+        ghostDistance = self.distancer.getDistance(PacMan_pos, self.closestGhost)
+        ghostDistances = [100, 100, 100, 100] #[oeste, este, norte, sur]
 
-        actual = self.distancer.getDistance(PacMan_pos, ClosestGhost)
-        norte = 100
-        sur = 100
-        este = 100
-        oeste = 100
+       
 
-        if Directions.NORTH in legal:
-            norte = self.distancer.getDistance((PacMan_pos[0], int(PacMan_pos[1]+1)), ClosestGhost)
-        if Directions.EAST in legal:
-            este =  self.distancer.getDistance((int(PacMan_pos[0]+1), PacMan_pos[1]), ClosestGhost)
-        if Directions.SOUTH in legal:
-            sur =  self.distancer.getDistance((PacMan_pos[0], int(PacMan_pos[1]-1)), ClosestGhost)
+        self.closestFood = None
+        min_dis = 1000000
+        foodDistance = 100
+        for i in range(state.data.layout.width):
+            for j in range(state.data.layout.height):
+                if state.hasFood(i, j):
+                    foodPosition = i, j
+                    foodDistance = self.distancer.getDistance(PacMan_pos, foodPosition)
+                    if foodDistance < min_dis:
+                        min_dis = foodDistance
+                        self.closestFood = foodPosition
+
+        foodDistances = [100, 100, 100, 100] #[oeste, este, norte, sur]
+        if self.closestFood != None:
+            actualFood = self.distancer.getDistance(PacMan_pos, self.closestFood)
+            print "las posiciones: " + str(foodPosition)
+        
+
         if Directions.WEST in legal:
-            oeste = self.distancer.getDistance((int(PacMan_pos[0]-1), PacMan_pos[1]), ClosestGhost)
-
-        #orden = [(norte, 0), (este, 1), (sur, 2), (oeste, 3)]
-        #orden.sort(key=lambda movimiento: movimiento[0])
-        orden = [norte, este, sur, oeste]
+            ghostDistances[0] = self.distancer.getDistance((int(PacMan_pos[0]-1), PacMan_pos[1]), self.closestGhost)
+            if self.closestFood != None:
+                foodDistances[0] = self.distancer.getDistance((int(PacMan_pos[0]-1), PacMan_pos[1]), self.closestFood)
+        if Directions.EAST in legal:
+            ghostDistances[1] =  self.distancer.getDistance((int(PacMan_pos[0]+1), PacMan_pos[1]), self.closestGhost)
+            if self.closestFood != None:
+                foodDistances[1] = self.distancer.getDistance((int(PacMan_pos[0]+1), PacMan_pos[1]), self.closestFood)
+        if Directions.NORTH in legal:
+            ghostDistances[2] = self.distancer.getDistance((PacMan_pos[0], int(PacMan_pos[1]+1)), self.closestGhost)
+            if self.closestFood != None:
+                foodDistances[2] = self.distancer.getDistance((int(PacMan_pos[0]), PacMan_pos[1]+1), self.closestFood)
+        if Directions.SOUTH in legal:
+            ghostDistances[3] =  self.distancer.getDistance((PacMan_pos[0], int(PacMan_pos[1]-1)), self.closestGhost)
+            if self.closestFood != None:
+                foodDistances[3] = self.distancer.getDistance((int(PacMan_pos[0]), PacMan_pos[1]-1), self.closestFood)
+        print "las distancias son: " + str(ghostDistances)
+        print "las distancias son: " + str(foodDistances)
         direcciones = []
-        for movimiento in orden:
-            if movimiento < actual:
-                direcciones.append(1)
-            else:
-                direcciones.append(0)
+        if self.closestFood == None or foodDistance > ghostDistance:
+            for movimiento in ghostDistances:
+                if movimiento < actualGhost:
+                    direcciones.append(1)
+                else:
+                    direcciones.append(0)
+        else:
+            for movimiento in foodDistances:
+                if movimiento < actualFood:
+                    direcciones.append(1)
+                else:
+                    direcciones.append(0)
+
             
+        
+        print "la lista es : " + str(direcciones)
+                
 
         return direcciones
 
@@ -1552,16 +1514,16 @@ class QLearningAgent(BustersAgent):
         position = self.computePosition(state) #obtenemos la posicion correspondiente con el estado actual
         naction = self.actions[self.choosen_action] #obtenemos el identificador de la accion a tomar
 
-     	print("Actualizando la posicion: " + str(position) + " y la accion " + str(naction) + " y la reward " + str(reward))
+     	# print("Actualizando la posicion: " + str(position) + " y la accion " + str(naction) + " y la reward " + str(reward))
 
         #Esto habra que ver cunado se pasa que no esta claro jejeje
-        # if reward==1.0: #el estado sera final si el refuerzo es 1
-        #     self.q_table[position][naction] = (1-self.alpha) * self.q_table[position][naction] + self.alpha * (reward + 0)
-        # else: #si el refuerzo es 0 entonces el estado sera no final
-        self.q_table[position][naction] = (1-self.alpha) * self.q_table[position][naction] + self.alpha * (reward + self.discount * self.getValue(nextState))
-
-
-
+        if sum(state.livingGhosts)==0: #si no hay fantasmas es el estado final
+            self.q_table[position][naction] = (1-self.alpha) * self.q_table[position][naction] + self.alpha * (reward + 0)
+        else: #si aun hay fantasmas vivos el estado no es final
+            self.q_table[position][naction] = (1-self.alpha) * self.q_table[position][naction] + self.alpha * (reward + self.discount * self.getValue(nextState))
+        
+        print "Estamos actualizando la linea " + str(position) + " con la accion " + str(naction) + " al valor " + str(self.q_table[position][naction]) + " teniamos un reward " + str(reward)
+        
     def getPolicy(self, state):
 	"Return the best action in the qtable for a given state"
         return self.computeActionFromQValues(state)
