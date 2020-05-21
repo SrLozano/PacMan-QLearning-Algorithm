@@ -1413,8 +1413,8 @@ class QLearningAgent(BustersAgent):
             action = self.getPolicy(state)
 
         #Descomentar estas dos lineas si se quiere entrenat al agente
-        if sum(state.livingGhosts) == 1:
-            sys.exit(0)
+        # if sum(state.livingGhosts) == 1:
+        #     sys.exit(0)
 
         return action
 
@@ -1456,23 +1456,24 @@ class QLearningAgent(BustersAgent):
             actualFood = self.distancer.getDistance(PacMan_pos, self.closestFood)
             print "las posiciones: " + str(foodPosition)
         
-
-        if Directions.WEST in legal:
-            ghostDistances[0] = self.distancer.getDistance((int(PacMan_pos[0]-1), PacMan_pos[1]), self.closestGhost)
+        if Directions.NORTH in legal:
+            ghostDistances[0] = self.distancer.getDistance((PacMan_pos[0], int(PacMan_pos[1]+1)), self.closestGhost)
             if self.closestFood != None:
-                foodDistances[0] = self.distancer.getDistance((int(PacMan_pos[0]-1), PacMan_pos[1]), self.closestFood)
+                foodDistances[0] = self.distancer.getDistance((int(PacMan_pos[0]), PacMan_pos[1]+1), self.closestFood)
         if Directions.EAST in legal:
             ghostDistances[1] =  self.distancer.getDistance((int(PacMan_pos[0]+1), PacMan_pos[1]), self.closestGhost)
             if self.closestFood != None:
                 foodDistances[1] = self.distancer.getDistance((int(PacMan_pos[0]+1), PacMan_pos[1]), self.closestFood)
-        if Directions.NORTH in legal:
-            ghostDistances[2] = self.distancer.getDistance((PacMan_pos[0], int(PacMan_pos[1]+1)), self.closestGhost)
-            if self.closestFood != None:
-                foodDistances[2] = self.distancer.getDistance((int(PacMan_pos[0]), PacMan_pos[1]+1), self.closestFood)
         if Directions.SOUTH in legal:
-            ghostDistances[3] =  self.distancer.getDistance((PacMan_pos[0], int(PacMan_pos[1]-1)), self.closestGhost)
+            ghostDistances[2] =  self.distancer.getDistance((PacMan_pos[0], int(PacMan_pos[1]-1)), self.closestGhost)
             if self.closestFood != None:
-                foodDistances[3] = self.distancer.getDistance((int(PacMan_pos[0]), PacMan_pos[1]-1), self.closestFood)
+                foodDistances[2] = self.distancer.getDistance((int(PacMan_pos[0]), PacMan_pos[1]-1), self.closestFood)
+        if Directions.WEST in legal:
+            ghostDistances[3] = self.distancer.getDistance((int(PacMan_pos[0]-1), PacMan_pos[1]), self.closestGhost)
+            if self.closestFood != None:
+                foodDistances[3] = self.distancer.getDistance((int(PacMan_pos[0]-1), PacMan_pos[1]), self.closestFood)
+        
+
         print "las distancias son: " + str(ghostDistances)
         print "las distancias son: " + str(foodDistances)
         direcciones = []
