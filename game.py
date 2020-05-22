@@ -725,7 +725,7 @@ class Game:
         #Q(s, a) = (1- alpha) * Q(s, a) + alpha * reward
         # print("Antes de update dek while")
         # QLearningAgent.update(self.past_state_while, self.state, 200)
-    
+        self.agents[0].finish(self.state)
         print("-----------------------------------Acaba-----------------------------------")
 
         # infoRrm a learning agent of the game result

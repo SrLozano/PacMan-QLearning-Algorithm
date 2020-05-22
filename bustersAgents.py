@@ -1200,8 +1200,8 @@ class QLearningAgent(BustersAgent):
         self.actions = {"North":0, "East":1, "South":2, "West":3}
         self.table_file = open("qtable.txt", "r+")
         self.q_table = self.readQtable()
-        self.epsilon = 0.5  #Probabilidad de que se mueva random
-        self.alpha = 0.2 #Tasa de aprendizaje representa como de agresivo es el aprendizaje 
+        self.epsilon = 0  #Probabilidad de que se mueva random
+        self.alpha = 0 #Tasa de aprendizaje representa como de agresivo es el aprendizaje 
         self.discount = 0.5 #Factor de descuento para dar mas importancia a las recompensas mas inmediatas
         self.past_state = None
 
@@ -1394,9 +1394,9 @@ class QLearningAgent(BustersAgent):
                         closest = foodDistance
 
                 if closest < self.lastDistance:
-                    reward = (1.0/closest)
+                    self.reward = 1/closest
                 else:
-                    reward = (-1)*(1.0/closest)
+                    self.reward = (-1)* (1/closest)
                 self.lastDistance = closest
 
             self.update(self.past_state, state, self.reward)
@@ -1535,4 +1535,12 @@ class QLearningAgent(BustersAgent):
 
     def chooseAction(self, gameState):
         pass
+
+    def finish(self, state):
+	"Destructor. Invokation at the end of each episode"
+        # print(self.q_table)
+        self.update(state, self.past_state, self.reward)
+        self.writeQtable()
+        # self.table_file.close()
+
         
