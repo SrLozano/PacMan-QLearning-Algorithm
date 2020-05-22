@@ -1200,7 +1200,7 @@ class QLearningAgent(BustersAgent):
         self.table_file = open("qtable.txt", "r+")
         self.q_table = self.readQtable()
         self.epsilon = 0.6  #Probabilidad de que se mueva random
-        self.alpha = 0 .2#Tasa de aprendizaje representa como de agresivo es el aprendizaje 
+        self.alpha = 0.2 #Tasa de aprendizaje representa como de agresivo es el aprendizaje 
         self.discount = 0.5 #Factor de descuento para dar mas importancia a las recompensas mas inmediatas
         self.past_state = None
 
