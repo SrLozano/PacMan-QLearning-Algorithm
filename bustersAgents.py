@@ -1186,7 +1186,6 @@ class QLearningAgent(BustersAgent):
     past_best_direction = [0,0,0,0]
     reward = 0
     nfood = 0
-    dfood = 1000
     lastDistance = 1000
     closestGhost = None
     closestFood = None
@@ -1202,17 +1201,15 @@ class QLearningAgent(BustersAgent):
         self.q_table = self.readQtable()
         self.epsilon = 0  #Probabilidad de que se mueva random
         self.alpha = 0 #Tasa de aprendizaje representa como de agresivo es el aprendizaje 
-        self.discount = 0.5 #Factor de descuento para dar mas importancia a las recompensas mas inmediatas
+        self.discount = 0 #Factor de descuento para dar mas importancia a las recompensas mas inmediatas
         self.past_state = None
 
 
     def registerInitialState(self, gameState):
         BustersAgent.registerInitialState(self, gameState)
         self.distancer = Distancer(gameState.data.layout, False)
-        # Se calcula el numero de fantasmas con el que se empieza el juego
-        self.living = sum(gameState.livingGhosts)
-        self.nfood = gameState.getNumFood()
-        self.dfood = gameState.getDistanceNearestFood()
+        self.living = sum(gameState.livingGhosts) # Se calcula el numero de fantasmas con el que se empieza el juego
+        self.nfood = gameState.getNumFood() # Se calcula el numero de puntos de comida con el que se empieza el juego
         
 
     ''' Example of counting something'''
@@ -1227,7 +1224,6 @@ class QLearningAgent(BustersAgent):
     ''' Print the layout'''
     def printGrid(self, gameState):
         table = ""
-        ##print(gameState.data.layout) ## Print by terminal
         for x in range(gameState.data.layout.width):
             for y in range(gameState.data.layout.height):
                 food, walls = gameState.data.food, gameState.data.layout.walls
@@ -1269,11 +1265,7 @@ class QLearningAgent(BustersAgent):
                 self.table_file.write(str(item)+" ")
             self.table_file.write("\n")
 
-    def __del__(self):
-	"Destructor. Invokation at the end of each episode"
-        # print(self.q_table)
-        self.writeQtable()
-        self.table_file.close()
+   
 
     def computePosition(self, state):
 	"""
@@ -1281,9 +1273,6 @@ class QLearningAgent(BustersAgent):
 	For instance, the state (3,1) is the row 7
 	"""
         row = self.best_direction[3]*pow(2,0) + self.best_direction[2]*pow(2,1) + self.best_direction[1]*pow(2,2) + self.best_direction[0]*pow(2,3)
-        # for i, direction in enumerate(self.best_direction):
-        #     row += direction * pow(2,i)
-        # print "El estado es: " + str(self.best_direction)
         return row
         
     def getQValue(self, state, action):
@@ -1339,7 +1328,6 @@ class QLearningAgent(BustersAgent):
             
         retorno = random.choice(best_actions)
 
-        # print("El retorno es: " + str(retorno))
         self.choosen_action = retorno
         return retorno
 
@@ -1353,35 +1341,25 @@ class QLearningAgent(BustersAgent):
         """
 
         # Pick Action
-        legalActions = state.getLegalActions(0)
-        legalActions.remove(Directions.STOP)
+        legalActions = state.getLegalActions(0) 
+        legalActions.remove(Directions.STOP) #la accion stop no se contempla
 
         if len(legalActions) == 0:
              return self.state
         else:
             self.past_best_direction = copy.deepcopy(self.best_direction)
-            self.best_direction = self.getOurState(state)
-        print "quedan: " + str(state.getNumFood())
+            self.best_direction = self.getOurState(state) #obtenemos nuestro estado
+
+
         if(self.past_state != None):
+            #funcion de refuerzo
             if sum(state.livingGhosts) < self.living:
                 self.living = sum(state.livingGhosts)
                 self.reward = 100
             elif state.getNumFood() < self.nfood:
-                print "ha comido!!!!!!!!!!!!!!!!!!!!!!!"
                 self.nfood = state.getNumFood()
                 self.reward = 50
             else:
-                # i_min = -1
-                # min_dis = 1000000
-                # PacMan_pos = state.getPacmanPosition()
-                # for ghost, living in enumerate(state.getLivingGhosts()):
-                #     if living: 
-                #         distance = self.distancer.getDistance(PacMan_pos, state.getGhostPositions()[ghost-1]) 
-                #         if distance < min_dis:
-                #             i_min = ghost
-                #             min_dis = distance
-        
-                # closest_ghost = state.getGhostPositions()[i_min-1]
                 ghostDistance = self.distancer.getDistance(state.getPacmanPosition(), self.closestGhost)
                 closest = 1000
                 if self.closestFood == None:
@@ -1412,18 +1390,18 @@ class QLearningAgent(BustersAgent):
         else:
             action = self.getPolicy(state)
 
-        #Descomentar estas dos lineas si se quiere entrenat al agente
+        # Las lineas comentadas hacen que solo se ejecute hasta comerse el penultimo fantasma
         # if sum(state.livingGhosts) == 1:
         #     sys.exit(0)
 
         return action
 
     def getOurState(self, state):
-
-        
-        legal = state.getLegalActions()
+        legal = state.getLegalActions() #obtenemos las acciones legales 
         i_min = -1
         min_dis = 1000000
+
+        #buscamos el fantasma mas cercano
         PacMan_pos = state.getPacmanPosition()
         for ghost, living in enumerate(state.getLivingGhosts()):
             if living: 
@@ -1435,10 +1413,10 @@ class QLearningAgent(BustersAgent):
         self.closestGhost = state.getGhostPositions()[i_min-1]
         actualGhost = self.distancer.getDistance(PacMan_pos, self.closestGhost)
         ghostDistance = self.distancer.getDistance(PacMan_pos, self.closestGhost)
-        ghostDistances = [100, 100, 100, 100] #[oeste, este, norte, sur]
+        ghostDistances = [100, 100, 100, 100] #[norte este, sur, oeste]
 
        
-
+       #buscamos el punto de comida mas cercano
         self.closestFood = None
         min_dis = 1000000
         foodDistance = 100
@@ -1451,11 +1429,11 @@ class QLearningAgent(BustersAgent):
                         min_dis = foodDistance
                         self.closestFood = foodPosition
 
-        foodDistances = [100, 100, 100, 100] #[oeste, este, norte, sur]
+        foodDistances = [100, 100, 100, 100] #[norte este, sur, oeste]
         if self.closestFood != None:
             actualFood = self.distancer.getDistance(PacMan_pos, self.closestFood)
-            print "las posiciones: " + str(foodPosition)
         
+        #obtenemos las distancias dependiendo de que accion se ejecute
         if Directions.NORTH in legal:
             ghostDistances[0] = self.distancer.getDistance((PacMan_pos[0], int(PacMan_pos[1]+1)), self.closestGhost)
             if self.closestFood != None:
@@ -1472,10 +1450,8 @@ class QLearningAgent(BustersAgent):
             ghostDistances[3] = self.distancer.getDistance((int(PacMan_pos[0]-1), PacMan_pos[1]), self.closestGhost)
             if self.closestFood != None:
                 foodDistances[3] = self.distancer.getDistance((int(PacMan_pos[0]-1), PacMan_pos[1]), self.closestFood)
-        
-
-        print "las distancias son: " + str(ghostDistances)
-        print "las distancias son: " + str(foodDistances)
+      
+        #almacenamos en el estado 0 o 1 dependiendo si se aleja o se acerca en esa direccion
         direcciones = []
         if self.closestFood == None or foodDistance > ghostDistance:
             for movimiento in ghostDistances:
@@ -1488,12 +1464,7 @@ class QLearningAgent(BustersAgent):
                 if movimiento < actualFood:
                     direcciones.append(1)
                 else:
-                    direcciones.append(0)
-
-            
-        
-        print "la lista es : " + str(direcciones)
-                
+                    direcciones.append(0)                
 
         return direcciones
 
@@ -1515,15 +1486,11 @@ class QLearningAgent(BustersAgent):
         position = self.computePosition(state) #obtenemos la posicion correspondiente con el estado actual
         naction = self.actions[self.choosen_action] #obtenemos el identificador de la accion a tomar
 
-     	# print("Actualizando la posicion: " + str(position) + " y la accion " + str(naction) + " y la reward " + str(reward))
-
-        #Esto habra que ver cunado se pasa que no esta claro jejeje
         if sum(state.livingGhosts)==0: #si no hay fantasmas es el estado final
             self.q_table[position][naction] = (1-self.alpha) * self.q_table[position][naction] + self.alpha * (reward + 0)
         else: #si aun hay fantasmas vivos el estado no es final
             self.q_table[position][naction] = (1-self.alpha) * self.q_table[position][naction] + self.alpha * (reward + self.discount * self.getValue(nextState))
         
-        print "Estamos actualizando la linea " + str(position) + " con la accion " + str(naction) + " al valor " + str(self.q_table[position][naction]) + " teniamos un reward " + str(reward)
         
     def getPolicy(self, state):
 	"Return the best action in the qtable for a given state"
@@ -1533,14 +1500,18 @@ class QLearningAgent(BustersAgent):
 	"Return the highest q value for a given state"
         return self.computeValueFromQValues(state)
 
-    def chooseAction(self, gameState):
+    def chooseAction(self, gameState): #funcion necesaria para que no haya errores de compilacion
         pass
 
     def finish(self, state):
-	"Destructor. Invokation at the end of each episode"
-        # print(self.q_table)
+	"Funcion para actualizar la tabla tras comerse el ultimo fantasma"
         self.update(state, self.past_state, self.reward)
         self.writeQtable()
-        # self.table_file.close()
+
+
+    def __del__(self):
+	"Destructor. Invokation at the end of each episode"
+        self.writeQtable()
+        self.table_file.close()
 
         
