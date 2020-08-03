@@ -1,4 +1,4 @@
-# Implementation of Q-Learning Algorithm for playing Pac-Man
+# Implementation of the Q-Learning Algorithm for playing Pac-Man
 This project is based on the Berkeley CS188 Intro to AI Pac-Man and consist on a solution that implements the Q-Learning Algorithm.
 
 ## Authors 🧑‍💻
